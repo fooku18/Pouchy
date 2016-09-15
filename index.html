@@ -11,6 +11,8 @@
 </head>
 <body>
 	<input ng-model="doc" type="text" placeholder="Eintrag..."><button ng-click="addItem()" id="btn-input">Click mich</button>
-	<div ng-repeat="i in item">{{i}}</div>
+	<ul>
+		<li ng-repeat="i in items track by $index">{{i}}</li>
+	</ul>
 </body>
 </html>

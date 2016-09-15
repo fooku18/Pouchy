@@ -22,16 +22,19 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 	
 	this.startListening = function() {
 		changeListener = database.changes({
-			live: true,
-			include_docs: true
-		}).on("change"), function(change) {
-			/*if(!change.deleted) {
+			since: "now",
+			live: true
+		}).on("change", function(change) {
+			if(!change.deleted) {
 				$rootScope.$broadcast("$pouchDB:change",change);
 			} else {
 				$rootScope.$broadcast("$pouchDB:delete",change);
-			}*/
-			console.log(change);
-		}
+			}
+		});
+	}
+	
+	this.fetchAllDocs = function() {
+		return database.allDocs({include_docs: true, descending: true});
 	}
 	
 	//this.stopListening = function() {
