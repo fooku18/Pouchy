@@ -1,18 +1,23 @@
 <!DOCTYPE html>
-<html ng-app="myApp" ng-controller="pouchyCtrl">
+<html ng-app="myApp">
 <head>
 	<meta charset="utf-8" />
 	<link rel="stylesheet" href="css/bootstrap.css" />
+	<link rel="stylesheet" href="css/main.css" />
 	<script style="text/javascript" src="js/jquery-3.1.0.min.js"></script>
 	<script style="text/javascript" src="js/pouchdb-6.0.4.js"></script>
 	<script style="text/javascript" src="js/angular.min.js"></script>
+	<script style="text/javascript" src="js/angular-route.js"></script>
 	<script style="text/javascript" src="js/service.js"></script>
 	<script style="text/javascript" src="js/app.js"></script>
+	<script style="text/javascript" src="js/directive.js"></script>
 </head>
 <body>
-	<input ng-model="doc" type="text" placeholder="Eintrag..."><button ng-click="addItem()" id="btn-input">Click mich</button>
-	<ul>
-		<li ng-repeat="i in items track by $index">{{i}}</li>
-	</ul>
+	<div class="frame">
+		<div class="container">
+			<navi></navi>
+			<div ng-view=""></div>
+		</div>
+	</div>
 </body>
 </html>

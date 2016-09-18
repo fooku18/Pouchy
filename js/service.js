@@ -9,10 +9,7 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 	
 	this.addDefer = function(doc) {
 		var defer = $q.defer();
-		database.put({
-			"_id": new Date().toISOString(),
-			"name": doc
-		}).then(function() {
+		database.put(doc).then(function() {
 			defer.resolve(doc);
 		},function() {
 			defer.reject(doc);
@@ -37,6 +34,10 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 		return database.allDocs({include_docs: true, descending: true});
 	}
 	
+	this.deleteDoc = function(id,rev) {
+		return database.remove(id,rev);
+	}
+	
 	//this.stopListening = function() {
 	//	changeListener.cancel();
 	//}
@@ -46,4 +47,19 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 	//	
 	//}
 	
+}]);
+
+myServices.factory("routeNavi",["$route","$location",function($route,$location) {
+	var routes = [];
+	angular.forEach($route.routes, function(val,key) {
+		if(val.name) {
+			routes.push({
+				path: key,
+				name: val.name
+			})
+		}
+	});
+	return {
+		routes: routes
+	}
 }]);
