@@ -11,25 +11,39 @@ app.run(["$pouchDB",function($pouchDB) {
 	});
 }]);
 
-app.controller("pouchyCtrl",["$scope","$rootScope","$pouchDB",function($scope,$rootScope,$pouchDB) {
+app.controller("pouchyCtrl",["$scope","$rootScope","$pouchDB","$location",function($scope,$rootScope,$pouchDB,$location) {
 	$scope.items = [];
 	
 	$pouchDB.startListening();
 	
-	$scope.addItem = function(name) {
-		console.log(name);
-		var entry = {
-			"_id": new Date().toISOString(),
-			"name": name
-		}
-		$pouchDB.addDefer(entry).then(function(doc) {
-			$("#inputField").val("");
-			console.log(doc.name + " created!");
+	$scope.addItem = function(cName,cType,cStart,cEnd) {
+		$pouchDB.fetchAllDocs().then(function(docs) {
+			console.log(docs.rows.length);
+			if(docs.rows.length !== 0) {
+				return docs.rows[0].id;
+			} else {
+				return 0;
+			}
+		}).then(function(maxID){
+			var mID = parseInt(maxID) + 1;
+			var entry = {
+				"_id": (mID).toString(),
+				"name": cName,
+				"type": cType,
+				"start": cStart,
+				"end": cEnd
+			}
+			return entry;
+		}).then(function(entry) {
+			$pouchDB.addDefer(entry).then(function(doc) {
+				$("#inputField").val("");
+				console.log(doc.name + " created!");
+			});
 		});
 	}
 	
-	$scope.keyHit = function(keyHit) {
-		if(keyHit.keyCode === 13) $scope.addItem($scope.name);
+	$scope.keyHit = function(keyHit,name) {
+		if(keyHit.keyCode === 13) $scope.addItem(name);
 	}
 	
 	$scope.fetchAll = function() {
@@ -45,7 +59,12 @@ app.controller("pouchyCtrl",["$scope","$rootScope","$pouchDB",function($scope,$r
 	$scope.fetchAll();
 	
 	$scope.deleteItem = function(id,rev) {
-		$pouchDB.deleteDoc(id,rev);
+		var conf = confirm("Sind Sie sicher das Sie den Eintrag löschen möchten?")
+		if(conf == true) $pouchDB.deleteDoc(id,rev);
+	}
+	
+	$scope.isActive = function(viewLocation) {
+		return viewLocation === $location.path();
 	}
 	
 	//Global Listeners

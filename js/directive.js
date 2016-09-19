@@ -8,3 +8,17 @@ app.directive("navi",["routeNavi",function(routeNavi) {
 		}
 	}
 }]);
+
+app.directive("datepicker",function() {
+	return {
+		restrict: "A",
+		link: function(scope,elem,attr) {
+			$(elem).datepicker({
+				dateFormat: "dd.mm.yy",
+				dayNamesMin: ["So","Mo","Di","Mi","Do","Fr","Sa"],
+				monthNames: [ "Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember" ],
+				autoSize: true
+			});
+		}
+	}
+});
