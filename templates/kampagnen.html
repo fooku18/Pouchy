@@ -1,0 +1,21 @@
+<div>
+	<div class="row padding-top-10">
+		<div class="col-md-10 col-sm-10">
+			<input id="inputField" class="form-control" ng-model="name" ng-keyup="keyHit($event)" type="text" placeholder="Eintrag..." />
+		</div>
+		<div class="col-md-2 col-sm-2">
+			<button class="btn btn-default" ng-click="addItem(name)" id="btn-input">Click mich</button>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12 col-sm-12">
+			<ul class="list-group">
+				<li class="list-group-item" ng-repeat="(key, value) in items track by $index">{{value.doc.name}}
+					<button ng-click="deleteItem(value.doc._id,value.doc._rev)" type="button" class="btn btn-danger pull-right" style="padding: 3px 4px;">
+						<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+					</button>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
