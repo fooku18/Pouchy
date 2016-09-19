@@ -37,16 +37,6 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 	this.deleteDoc = function(id,rev) {
 		return database.remove(id,rev);
 	}
-	
-	//this.stopListening = function() {
-	//	changeListener.cancel();
-	//}
-	
-	//this.save = function(doc) {
-	//	var deferred = $q.defer();
-	//	
-	//}
-	
 }]);
 
 myServices.factory("routeNavi",["$route","$location",function($route,$location) {

@@ -22,3 +22,15 @@ app.directive("datepicker",function() {
 		}
 	}
 });
+
+app.directive("quicksend",function() {
+	return {
+		restrict: "A",
+		scope: {hit: "&"},
+		link: function(scope,elem,attr) {
+			elem.on("keyup",function(e) {
+				if(e.keyCode === 13) scope.hit();
+			});
+		}
+	}
+});
