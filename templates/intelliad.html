@@ -1,24 +1,24 @@
 <div ng-controller="intelliAdCtrl">
 	<div class="row padding-top-10 padding-bottom-10">
-		<div class="col-md-3 col-sm-3">
+		<div class="col-md-8 col-sm-8 block">
 			<div class="padding-bottom-5">
 				<span class="label label-default">IntelliAd-Kampagne</span>
 			</div>
 			<input id="inputField" class="form-control" ng-model="cName" type="text" placeholder="" quicksend hit="keyHit()" />
 		</div>
-		<div class="col-md-3 col-sm-3">
+		<div class="col-md-8 col-sm-8 block">
 			<div class="padding-bottom-5">
 				<span class="label label-default">Stamm-Url</span>
 			</div>
 			<input class="form-control" ng-model="cRoot" type="text" placeholder="" quicksend hit="keyHit()" />
 		</div>
-		<div class="col-md-4 col-sm-3">
+		<div class="col-md-8 col-sm-8">
 			<div class="padding-bottom-5">
 				<span class="label label-default">Zusatz-Url</span>
 			</div>
 			<input class="form-control" ng-model="cExt" type="text" placeholder="" quicksend hit="keyHit()" />
 		</div>
-		<div class="col-md-1 col-sm-1 padding-top-25">
+		<div class="col-md-4 col-sm-4 padding-top-25">
 			<button class="btn btn-default" ng-click="addItem(cName,cRoot,cExt)" id="btn-input">Kampagne anlegen</button>
 		</div>
 	</div>

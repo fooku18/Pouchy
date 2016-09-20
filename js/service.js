@@ -1,16 +1,15 @@
 var myServices = angular.module("myServices",[]);
 myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
-	var database;
+	var database = {};
 	var changeListener;
 	
 	this.setDatabase = function(databaseName) {
-		name = databaseName;
-		database = new PouchDB(databaseName);
+		database[databaseName] = new PouchDB(databaseName);
 	}
 	
-	this.addDefer = function(doc) {
+	this.addDefer = function(db,doc) {
 		var defer = $q.defer();
-		database.put(doc).then(function() {
+		database[db].put(doc).then(function() {
 			defer.resolve(doc);
 		},function() {
 			defer.reject(doc);
@@ -18,25 +17,25 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 		return defer.promise;
 	}
 	
-	this.startListening = function(dbName) {
-		changeListener = database.changes({
+	this.startListening = function(db) {
+		changeListener = database[db].changes({
 			since: "now",
 			live: true
 		}).on("change", function(change) {
 			if(!change.deleted) {
-				$rootScope.$broadcast(dbName + ":change",change);
+				$rootScope.$broadcast(db + ":change",change);
 			} else {
-				$rootScope.$broadcast(dbName + ":delete",change);
+				$rootScope.$broadcast(db + ":delete",change);
 			}
 		});
 	}
 	
-	this.fetchAllDocs = function() {
-		return database.allDocs({include_docs: true, descending: true});
+	this.fetchAllDocs = function(db) {
+		return database[db].allDocs({include_docs: true, descending: true});
 	}
 	
-	this.deleteDoc = function(id,rev) {
-		return database.remove(id,rev);
+	this.deleteDoc = function(db,id,rev) {
+		return database[db].remove(id,rev);
 	}
 }]);
 

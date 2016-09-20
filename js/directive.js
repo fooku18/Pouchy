@@ -49,3 +49,30 @@ app.directive("sitetitle",function() {
 		}
 	}
 });
+
+app.directive("popdown",function() {
+	return {
+		restrict: "A",
+		scope: {
+			options: "="
+		},
+		controller: function($scope) {
+			$scope.selected = "";
+			$scope.stat = false;
+			$scope.switcher = function() {
+				$scope.stat = !$scope.stat;
+			}
+			$scope.selectIt = function(val) {
+				$scope.selected = val;
+			}
+		},
+		template: 	"<div class='popdown' ng-click='switcher()'>{{selected}}" +
+						"<div class='arrow'><span class='glyphicon glyphicon-chevron-down' aria-hidden='true'></span></div>" +
+						"<div ng-show='stat' class='poplist'>" + 
+							"<div class='popitem' ng-repeat='i in options' ng-click='selectIt(i)'>" +
+								"<span>{{i}}</span>" + 
+							"</div>" +
+						"</div>" +
+					"</div>"
+	}
+});
