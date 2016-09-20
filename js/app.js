@@ -1,6 +1,7 @@
 var app = angular.module("myApp",["myServices","ngRoute"]);
 app.run(["$pouchDB",function($pouchDB) {
-	$pouchDB.setDatabase("localDB");
+	$pouchDB.setDatabase("campaigns_DB");
+	$pouchDB.setDatabase("intelliAd_DB");
 }]).config(["$routeProvider",function($routeProvider) {
 	$routeProvider.when("/", {
 		templateUrl: "templates/kampagnen.html",

@@ -1,6 +1,6 @@
 <div ng-controller="naviCtrl">
 	<ul class="nav nav-tabs">
-		<li ng-repeat="nav in routes" ng-class="{active: isActive('{{nav.path}}')}">
+		<li ng-repeat="nav in routes" ng-class="{active: isActive('{{nav.path}}')}" ng-click="setTitle(nav.name)">
 			<a href="#{{nav.path}}">{{nav.name}}</a>
 		</li>
 	</ul>

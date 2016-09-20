@@ -34,3 +34,18 @@ app.directive("quicksend",function() {
 		}
 	}
 });
+
+app.directive("sitetitle",function() {
+	return {
+		restrict: "E",
+		transclude: true,
+		template: "<div class='title'><h1><div ng-transclude></div></h1></div>",
+		replace: true,
+		controller: function($scope,$rootScope) {
+			$scope.title = "Kampagnen";
+			$rootScope.$on("$location:change", function(event,data) {
+				$scope.title = data;
+			});
+		}
+	}
+});

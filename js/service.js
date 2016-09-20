@@ -4,6 +4,7 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 	var changeListener;
 	
 	this.setDatabase = function(databaseName) {
+		name = databaseName;
 		database = new PouchDB(databaseName);
 	}
 	
@@ -17,15 +18,15 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 		return defer.promise;
 	}
 	
-	this.startListening = function() {
+	this.startListening = function(dbName) {
 		changeListener = database.changes({
 			since: "now",
 			live: true
 		}).on("change", function(change) {
 			if(!change.deleted) {
-				$rootScope.$broadcast("$pouchDB:change",change);
+				$rootScope.$broadcast(dbName + ":change",change);
 			} else {
-				$rootScope.$broadcast("$pouchDB:delete",change);
+				$rootScope.$broadcast(dbName + ":delete",change);
 			}
 		});
 	}
