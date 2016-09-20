@@ -1,0 +1,51 @@
+app.directive("navi",["routeNavi",function(routeNavi) {
+	return {
+		restrict: "E",
+		replace: true,
+		templateUrl: "templates/navi_template.html",
+		controller: function($scope) {
+			$scope.routes = routeNavi.routes;
+		}
+	}
+}]);
+
+app.directive("datepicker",function() {
+	return {
+		restrict: "A",
+		link: function(scope,elem,attr) {
+			$(elem).datepicker({
+				dateFormat: "dd.mm.yy",
+				dayNamesMin: ["So","Mo","Di","Mi","Do","Fr","Sa"],
+				monthNames: [ "Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember" ],
+				autoSize: true
+			});
+		}
+	}
+});
+
+app.directive("quicksend",function() {
+	return {
+		restrict: "A",
+		scope: {hit: "&"},
+		link: function(scope,elem,attr) {
+			elem.on("keyup",function(e) {
+				if(e.keyCode === 13) scope.hit();
+			});
+		}
+	}
+});
+
+app.directive("sitetitle",function() {
+	return {
+		restrict: "E",
+		transclude: true,
+		template: "<div class='title'><h1><div ng-transclude></div></h1></div>",
+		replace: true,
+		controller: function($scope,$rootScope) {
+			$scope.title = "Kampagnen";
+			$rootScope.$on("$location:change", function(event,data) {
+				$scope.title = data;
+			});
+		}
+	}
+});
