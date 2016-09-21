@@ -1,26 +1,32 @@
-<div>
-	<instance-controller dbname="intelliAd_DB">
+<instance-controller dbname="testDb">
+	<!--
 	<div class="row padding-top-10 padding-bottom-10">
-		<div class="col-md-8 col-sm-8 block">
+		<div class="col-md-8 col-sm-8">
 			<div class="padding-bottom-5">
-				<span class="label label-default">IntelliAd-Kampagne</span>
+				<span class="label label-default">Ziel-Url</span>
 			</div>
-			<input id="inputField" class="form-control" ng-model="cName" type="text" placeholder="" quicksend hit="keyHit()" />
+			<input id="inputField" class="form-control" ng-model="cUrl" type="text" placeholder="" quicksend hit="keyHit()" />
+		</div>
+		<div class="col-md-4 col-sm-4">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Intern/Extern</span>
+			</div>
+			<div popdown options="['Intern','Extern']"></div>
 		</div>
 		<div class="col-md-8 col-sm-8 block">
 			<div class="padding-bottom-5">
-				<span class="label label-default">Stamm-Url</span>
+				<span class="label label-default">Werbemittel</span>
 			</div>
-			<input class="form-control" ng-model="cRoot" type="text" placeholder="" quicksend hit="keyHit()" />
+			<input class="form-control" ng-model="cAd" type="text" placeholder="" quicksend hit="keyHit()" />
 		</div>
 		<div class="col-md-8 col-sm-8">
 			<div class="padding-bottom-5">
-				<span class="label label-default">Zusatz-Url</span>
+				<span class="label label-default">Platzierung</span>
 			</div>
-			<input class="form-control" ng-model="cExt" type="text" placeholder="" quicksend hit="keyHit()" />
+			<input class="form-control" ng-model="cPlacement" type="text" placeholder="" quicksend hit="keyHit()" />
 		</div>
 		<div class="col-md-4 col-sm-4 padding-top-25">
-			<button class="btn btn-default" ng-click="addItem({'name':cName,'root':cRoot,'ext':cExt})" id="btn-input">Kampagne anlegen</button>
+			<button class="btn btn-default" ng-click="addItem(cName,cRoot,cExt)" id="btn-input">Kampagne anlegen</button>
 		</div>
 	</div>
 	<div class="row">
@@ -41,5 +47,5 @@
 			</table>
 		</div>
 	</div>
-	</instance-controller>
-</div>
+	-->
+</instance-controller>

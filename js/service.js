@@ -1,6 +1,7 @@
 var myServices = angular.module("myServices",[]);
 myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 	var database = {};
+	var listening = [];
 	var changeListener;
 	
 	this.setDatabase = function(databaseName) {
@@ -18,16 +19,22 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 	}
 	
 	this.startListening = function(db) {
+		if(listening.indexOf(db) > -1) return;
+		listening.push(db);
 		changeListener = database[db].changes({
 			since: "now",
 			live: true
 		}).on("change", function(change) {
 			if(!change.deleted) {
-				$rootScope.$broadcast(db + ":change",change);
+				$rootScope.$broadcast("db:change",change);
 			} else {
-				$rootScope.$broadcast(db + ":delete",change);
+				$rootScope.$broadcast("db:delete",change);
 			}
 		});
+	}
+	
+	this.editSingle = function(db) {
+		
 	}
 	
 	this.fetchAllDocs = function(db) {
@@ -52,4 +59,22 @@ myServices.factory("routeNavi",["$route","$location",function($route,$location) 
 	return {
 		routes: routes
 	}
+}]);
+
+myServices.value("dbService",{
+	retrieve: function() {
+		return $("instance-controller").attr("dbname");
+	}
+});
+
+myServices.factory("msgBusService",["$rootScope",function($rootScope) {
+	var msgBus = {};
+	msgBus.emit = function(msg,data) {
+		$rootScope.$emit(msg,data);
+	};
+	msgBus.get = function(msg,scope,func) {
+		var unbind = $rootScope.$on(msg,func);
+		scope.$on("$destory",unbind);
+	};
+	return msgBus;
 }]);

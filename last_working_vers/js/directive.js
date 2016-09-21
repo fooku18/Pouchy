@@ -54,11 +54,10 @@ app.directive("popdown",function() {
 	return {
 		restrict: "A",
 		scope: {
-			options: "=",
-			initial: "="
+			options: "="
 		},
 		controller: function($scope) {
-			$scope.selected = $scope.initial;
+			$scope.selected = "";
 			$scope.stat = false;
 			$scope.switcher = function() {
 				$scope.stat = !$scope.stat;
@@ -87,49 +86,8 @@ app.directive("instanceController",function() {
 			$scope.getdbName();
 			$scope.startListening();
 			$scope.fetchInitial();
+			console.log($scope.items);
 		},
 		template: "<div ng-transclude></div>"
-	}
-});
-
-app.directive('modalDialog', function() {
-	return {
-		restrict: 'E',
-		scope: {},
-		replace: true,
-		transclude: true,
-		link: function(scope, element, attrs,ctrl,transcludeFn) {
-			scope.dialogStyle = {};
-			if (attrs.width) scope.dialogStyle.width = attrs.width;
-			if (attrs.height) scope.dialogStyle.height = attrs.height;
-			scope.test = function() {alert("Hund");};
-		},
-		controller: function($scope,$rootScope,msgBusService) {
-			$scope.show = false;
-			$scope.hideModal = function() {
-				$scope.show = false;
-			};
-			$scope.istrue = function(val) {
-				if(val === 'Extern') {
-					return true;
-				} else {
-					return false;
-				}
-			};
-			msgBusService.get("modal:toggle",$scope,function(event,data) {
-				$scope.show = true;
-				$scope.doc = data;
-			});
-		},
-		template: 	"<div class='ng-modal' ng-show='show'>" +
-						"<div class='ng-modal-overlay' ng-click='test()'></div>" + 
-						"<div class='ng-modal-dialog' ng-style='dialogStyle'>" +
-							"<div class='ng-modal-close' ng-click='hideModal()'>X</div>" +
-							"<div class='ng-modal-icon'><span class='glyphicon glyphicon-plus'></span></div>" +
-							"<div class='ng-modal-dialog-padding'>" +
-								"<div class='ng-modal-dialog-content' ng-transclude></div>" +
-							"</div>" +
-						"</div>" +
-					"</div>"
 	}
 });
