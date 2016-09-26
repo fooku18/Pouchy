@@ -1,0 +1,35 @@
+<div ng-controller="mainCtrl" db="channelID_DB">
+	<div class="row padding-top-10 padding-bottom-10">
+		<div class="col-md-8 col-sm-8 block">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Kanal-ID</span>
+			</div>
+			<input class="inputField form-control" ng-model="cChannelID" type="text" placeholder="" quicksend hit="keyHit()" />
+		</div>
+		<div class="col-md-8 col-sm-8 block">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Kanal</span>
+			</div>
+			<input class="inputField form-control" ng-model="cChannel" type="text" placeholder="" quicksend hit="keyHit()" />
+		</div>
+		<div class="col-md-4 col-sm-4 padding-top-25">
+			<button class="btn btn-default" ng-click="addItem({'channelID':cChannel,'channel':cChannel})" id="btn-input">Kanal-ID anlegen</button>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12 col-sm-12">
+			<table class="table table-responsive table-hover">
+				<th>Kanal-ID</th><th>Kanal</th><th style="text-align: center;">Löschen</th>
+				<tr ng-repeat="(key,value) in items track by $index">
+					<td>{{value.doc.channelID}}</td>
+					<td>{{value.doc.channel}}</td>
+					<td align="center">
+						<button ng-click="deleteItem(value.doc._id,value.doc._rev)" type="button" class="btn btn-default" style="padding: 1px 1px;">
+							<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+						</button>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>

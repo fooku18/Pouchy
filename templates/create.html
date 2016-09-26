@@ -1,93 +1,100 @@
-<div>
-	<instance-controller dbname="cid_DB">
-	<modal-dialog width="650px" height="600px">
-		<div class="row">
+<div ng-controller="mainCtrl" db="cid_DB">
+	<modal-dialog width="650px" height="670px">
+		<div class="row" ng-controller="modalCtrl">
+			<input type="hidden" ng-model="values._id" />
+			<input type="hidden" ng-model="values._rev" />
 			<div class="col-md-12 col-sm-12 block">
 				<div class="padding-bottom-5">
-					<span class="label label-default" ng-click="test()">Ziel-Url</span>
+					<span class="label label-default">Ziel-Url</span>
 				</div>
-				<input id="inputField" class="form-control"  type="text" placeholder="" quicksend hit="keyHit()" mandatory value="{{tempDocs.targeturl}}" />
+				<input ng-model="values.targeturl" class="inputField form-control"  type="text" placeholder="" quicksend hit="keyHit()" mandatory />
 			</div>
-			<div class="col-md-3 col-sm-3 block">
+			<div class="col-md-6 col-sm-6 block">
 				<div class="padding-bottom-5">
-					<span class="label label-default">Intern/Extern</span>
+					<span class="label label-default" ng-click="show()">Intern/Extern</span>
 				</div>
-				<div ng-model="intext" popdown options="['Intern','Extern']" initial="'Intern'"></div>
+				<select ng-model="values.intext" class="form-control">
+					<option>Intern</option>
+					<option>Extern</option>
+				</select>
 			</div>
-			<div class="col-md-3 col-sm-3 block" ng-if="istrue(intext)">
+			<div class="col-md-6 col-sm-6 block" ng-show="isActive(values.intext)">
 				<div class="padding-bottom-5">
 					<span class="label label-default">Externe Kampagne</span>
 				</div>
-				<div popdown options="['A','B']" initial="''"></div>
+				<select ng-model="values.extcampaign" class="form-control">
+					<option ng-repeat="i in intelliAdCampaigns">{{i.name}}</option>
+				</select>
 			</div>
 			<div class="col-md-12 col-sm-12 block">
 				<div class="padding-bottom-5">
 					<span class="label label-default">Werbemittel</span>
 				</div>
-				<input id="inputField" class="form-control" ng-model="cAd" type="text" placeholder="" quicksend hit="keyHit()" />
+				<input ng-model="values.ad" class="inputField form-control" type="text" placeholder="" quicksend hit="keyHit()" />
 			</div>
 			<div class="col-md-12 col-sm-12 block">
 				<div class="padding-bottom-5">
 					<span class="label label-default">Platzierung</span>
 				</div>
-				<input id="inputField" class="form-control" ng-model="cPlacement" type="text" placeholder="" quicksend hit="keyHit()" />
+				<input ng-model="values.placement" class="inputField form-control" type="text" placeholder="" quicksend hit="keyHit()" />
 			</div>
 			<div class="col-md-12 col-sm-12 block">
 				<div class="padding-bottom-5">
 					<span class="label label-default">Werbemittel Typ</span>
 				</div>
-				<input id="inputField" class="form-control" ng-model="cAdType" type="text" placeholder="" quicksend hit="keyHit()" />
+				<input ng-model="values.adtype" class="inputField form-control" type="text" placeholder="" quicksend hit="keyHit()" />
 			</div>
 			<div class="col-md-12 col-sm-12 block">
 				<div class="padding-bottom-5">
 					<span class="label label-default">Creative Channel</span>
 				</div>
-				<input id="inputField" class="form-control" ng-model="cCreativeChannel" type="text" placeholder="" quicksend hit="keyHit()" />
+				<input ng-model="values.creativechannel" class="inputField form-control" type="text" placeholder="" quicksend hit="keyHit()" />
 			</div>
 			<div class="col-md-12 col-sm-12 block">
 				<div class="padding-bottom-5">
 					<span class="label label-default">Werbemittel-ID</span>
 				</div>
-				<input id="inputField" class="form-control" ng-model="cAdID" type="text" placeholder="" quicksend hit="keyHit()" />
+				<input ng-model="values.adid" class="inputField form-control" type="text" placeholder="" quicksend hit="keyHit()" />
 			</div>
 			<div class="col-md-12 col-sm-12 block">
 				<div class="padding-bottom-5">
 					<span class="label label-default">Zufalls-ID</span>
 				</div>
-				<input id="inputField" class="form-control" ng-model="cRandomID" type="text" placeholder="" quicksend hit="keyHit()" />
+				<input ng-model="values.randomid" class="inputField form-control" type="text" placeholder="" quicksend hit="keyHit()" />
 			</div>
+			<!--
 			<div class="col-md-1 col-sm-1 padding-top-25 pull-right">
 				<button class="btn btn-default" ng-click="" id="btn-input"><span class="glyphicon glyphicon-trash"></span></button>
 			</div>
+			-->
 			<div class="col-md-1 col-sm-1 padding-top-25 pull-right">
-				<button class="btn btn-default" ng-click="addItem({'targeturl':cTargetUrl})" id="btn-input"><span class="glyphicon glyphicon-floppy-disk"></span></button>
+				<button class="btn btn-default" ng-click="addToDB({'_id':values._id,'_rev':values._rev,'targeturl':values.targeturl,'intext':values.intext,'extcampaigns':values.extcampaign,'ad':values.ad,'placement':values.placement,'adtype':values.adtype,'creativechannel':values.creativechannel,'adid':values.adid,'randomid':values.randomid})" id="btn-input"><span class="glyphicon glyphicon-floppy-disk"></span></button>
 			</div>
 		</div>
 	</modal-dialog>
-		<div class="row relative">
-			<div class="add-cid absolute">
-				<button type="button" class="btn btn-default btn-lg" ng-click="showModal('modal:toggle')">
-					<span class='glyphicon glyphicon-plus'></span>
-				</button>
-			</div>
-			<div class="col-md-12 col-sm-12">
-				<table class="table table-responsive table-hover">
-					<th>Ziel-Url</th><th>Werbemittel</th><th>CID</th>
-					<tr ng-repeat="(key,value) in items track by $index">
-						<td>{{value.doc.targeturl}}</td>
-						<td>{{value.doc.ad}}</td>
-						<td>{{value.doc.cid}}</td>
-						<td align="center" style="width:70px">
-							<button ng-click="showModal('modal:toggle',value.doc)" type="button" class="btn btn-default" style="padding: 1px 1px;">
-								<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
-							</button>
-							<button ng-click="deleteItem(value.doc._id,value.doc._rev)" type="button" class="btn btn-default" style="padding: 1px 1px;">
-								<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-							</button>
-						</td>
-					</tr>
-				</table>
-			</div>
+	<div class="row relative">
+		<div class="add-cid absolute">
+			<button type="button" class="btn btn-default btn-lg" ng-click="showModal()">
+				<span class='glyphicon glyphicon-plus'></span>
+			</button>
 		</div>
-	</instance-controller>
+		<div class="col-md-12 col-sm-12">
+			<table class="table table-responsive table-hover">
+				<th>Ziel-Url</th><th>Werbemittel</th><th>CID</th>
+				<tr ng-repeat="(key,value) in items track by $index">
+					<td>{{value.doc.targeturl}}</td>
+					<td>{{value.doc.ad}}</td>
+					<td>{{value.doc.cid}}</td>
+					<td align="center" style="width:70px">
+						<button ng-click="showModal(value.doc)" type="button" class="btn btn-default" style="padding: 1px 1px;">
+							<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
+						</button>
+						<button ng-click="deleteItem(value.doc._id,value.doc._rev)" type="button" class="btn btn-default" style="padding: 1px 1px;">
+							<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+						</button>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
 </div>

@@ -1,8 +1,13 @@
 var myServices = angular.module("myServices",[]);
-myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
+myServices.service("$pouchDB",["$rootScope","$q","msgBusService",function($rootScope,$q,msgBusService) {
 	var database = {};
 	var listening = [];
+	var moduleListeners = [];
 	var changeListener;
+	
+	this.getDatabases = function(dbName) {
+		return database[dbName];
+	}
 	
 	this.setDatabase = function(databaseName) {
 		database[databaseName] = new PouchDB(databaseName);
@@ -26,16 +31,16 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 			live: true
 		}).on("change", function(change) {
 			if(!change.deleted) {
-				$rootScope.$broadcast("db:change",change);
+				msgBusService.emit("db:change",change);
 			} else {
-				$rootScope.$broadcast("db:delete",change);
+				msgBusService.emit("db:delete",change);
 			}
 		});
 	}
 	
-	this.editSingle = function(db) {
-		
-	}
+	this.sync = function(db,remoteDatabase) {
+        database[db].sync(remoteDatabase, {live: true, retry: true});
+    }
 	
 	this.fetchAllDocs = function(db) {
 		return database[db].allDocs({include_docs: true, descending: true});
@@ -44,7 +49,25 @@ myServices.service("$pouchDB",["$rootScope","$q",function($rootScope,$q) {
 	this.deleteDoc = function(db,id,rev) {
 		return database[db].remove(id,rev);
 	}
+	
+	this.setModuleListeners = function(val) {
+		moduleListeners.push(val);
+	}
+	
+	this.getModuleListeners = function() {
+		return moduleListeners;
+	}
 }]);
+
+myServices.service("docShareService",function() {
+	var values = {};
+	this.setValues = function(val) {
+		values = val;
+	}
+	this.getValues = function() {
+		return values;
+	}
+});
 
 myServices.factory("routeNavi",["$route","$location",function($route,$location) {
 	var routes = [];
@@ -60,12 +83,6 @@ myServices.factory("routeNavi",["$route","$location",function($route,$location) 
 		routes: routes
 	}
 }]);
-
-myServices.value("dbService",{
-	retrieve: function() {
-		return $("instance-controller").attr("dbname");
-	}
-});
 
 myServices.factory("msgBusService",["$rootScope",function($rootScope) {
 	var msgBus = {};

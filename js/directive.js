@@ -35,14 +35,15 @@ app.directive("quicksend",function() {
 	}
 });
 
-app.directive("sitetitle",function() {
+app.directive("sitetitle",function(routeNavi,$location) {
 	return {
 		restrict: "E",
-		transclude: true,
-		template: "<div class='title'><h1><div ng-transclude></div></h1></div>",
+		template: "<div class='title'><h1>{{title}}</div></h1></div>",
 		replace: true,
 		controller: function($scope,$rootScope) {
-			$scope.title = "Kampagnen";
+			for(var i=0; i<=routeNavi.routes.length-1;i++) {
+				if(routeNavi.routes[i].path === $location.path()) $scope.title = routeNavi.routes[i].name;
+			}
 			$rootScope.$on("$location:change", function(event,data) {
 				$scope.title = data;
 			});
@@ -50,7 +51,7 @@ app.directive("sitetitle",function() {
 	}
 });
 
-app.directive("popdown",function() {
+app.directive("popdown",function(msgBusService) {
 	return {
 		restrict: "A",
 		scope: {
@@ -78,20 +79,6 @@ app.directive("popdown",function() {
 	}
 });
 
-app.directive("instanceController",function() {
-	return {
-		restrict: "E",
-		scope: true,
-		transclude: true,
-		controller: function($scope) {
-			$scope.getdbName();
-			$scope.startListening();
-			$scope.fetchInitial();
-		},
-		template: "<div ng-transclude></div>"
-	}
-});
-
 app.directive('modalDialog', function() {
 	return {
 		restrict: 'E',
@@ -102,23 +89,14 @@ app.directive('modalDialog', function() {
 			scope.dialogStyle = {};
 			if (attrs.width) scope.dialogStyle.width = attrs.width;
 			if (attrs.height) scope.dialogStyle.height = attrs.height;
-			scope.test = function() {alert("Hund");};
 		},
 		controller: function($scope,$rootScope,msgBusService) {
 			$scope.show = false;
 			$scope.hideModal = function() {
 				$scope.show = false;
 			};
-			$scope.istrue = function(val) {
-				if(val === 'Extern') {
-					return true;
-				} else {
-					return false;
-				}
-			};
 			msgBusService.get("modal:toggle",$scope,function(event,data) {
 				$scope.show = true;
-				$scope.doc = data;
 			});
 		},
 		template: 	"<div class='ng-modal' ng-show='show'>" +

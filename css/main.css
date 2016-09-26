@@ -1,3 +1,13 @@
+select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	border:none;
+	background-position: right;
+	background-repeat: no-repeat;
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAKCAYAAAA6jzeaAAAA8klEQVQ4jb3PsWpCQRCF4a18EBvBSrCysPIFQmDBStjZ+U9j6VMJSZ067yIIgiCCTaLeNLsgIQkRvZ5qi5kz34YYYwdYuvtzuCKSnoBljLFzzd5vZa+SGkmfwPQ/O8BU0oekBni5GZFznkg6lMKju8/+mnf3GXAs8EPOeXIzohSPgX0pPgH8NAcg6VTAe3cf3wVQY2YjSbty4Ozu82/QOXAu0J2Zje4KuDg0BLYVImkRQgiSFhUAbN192AqgBhgAm/LjRtJbfQMbYNAqoCal1Je0voA0ktYppf5DADVm1pO0KoCVmfUeCriAdCW9m1m3zTtfjy6QikAhdtsAAAAASUVORK5CYII=) !important;
+}
+
 .bar {
 	position: fixed;
 	width: 100%;
