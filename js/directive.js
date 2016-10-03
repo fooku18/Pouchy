@@ -79,6 +79,40 @@ app.directive("popdown",function(msgBusService) {
 	}
 });
 
+app.directive("modalOnDemand",["$rootScope","msgBusService","modalService",function($rootScope,msgBusService,modalService) {
+	return {
+		restrict: "E",
+		scope: {},
+		template: 	"<div ng-show='modalShow'>" +
+						"<div class='modal-overlay'></div>" +
+						"<div class='modal-dialog'>" + 
+							"<div class='modal-bar'>&nbsp;</div>" +
+							"<div class='modal-icon'><span ></span></div>" +
+							"<button ng-click='modalHide()' type='button' class='btn btn-default ng-modal-close' style='padding: 3px 3px;'>" +
+								"<span class='glyphicon glyphicon-remove' aria-hidden='true'></span>" +
+							"</button>" +
+							"<div class='modal-dialog-padding'>" +
+								"<div class='modal-dialog-content'>" +
+									"<ng-include src='modalTemplate' />" +
+								"</div>" + 
+							"</div>" +
+						"</div>" +
+					"</div>",
+		link: function(scope,elem,attr) {
+			scope.modalShow = null;
+			scope.modalHide = function() {
+				modalService.reject();
+				scope.modalShow = null;
+			};
+			scope.modalTemplate = "";
+			msgBusService.get("modal:init",scope,function(event,data) {
+				scope.modalShow = data;
+				scope.modalTemplate = "templates/modal/" + data + ".html";
+			});
+		}
+	}
+}]);
+
 app.directive('modalDialog', function() {
 	return {
 		restrict: 'E',
@@ -87,8 +121,10 @@ app.directive('modalDialog', function() {
 		transclude: true,
 		link: function(scope, element, attrs,ctrl,transcludeFn) {
 			scope.dialogStyle = {};
-			if (attrs.width) scope.dialogStyle.width = attrs.width;
-			if (attrs.height) scope.dialogStyle.height = attrs.height;
+			if(attrs.width) scope.dialogStyle.width = attrs.width;
+			if(attrs.height) scope.dialogStyle.height = attrs.height;
+			if(attrs.icon) scope.icon = attrs.icon;
+			scope.modalType = attrs.type;
 		},
 		controller: function($scope,$rootScope,msgBusService) {
 			$scope.show = false;
@@ -96,18 +132,50 @@ app.directive('modalDialog', function() {
 				$scope.show = false;
 			};
 			msgBusService.get("modal:toggle",$scope,function(event,data) {
-				$scope.show = true;
+				if($scope.modalType === "alert") {
+					$scope.show = true;
+				} else if($scope.modalType === "insert") {
+					$scope.show = true;
+				}
 			});
 		},
 		template: 	"<div class='ng-modal' ng-show='show'>" +
-						"<div class='ng-modal-overlay' ng-click='test()'></div>" + 
+						"<div class='ng-modal-overlay'></div>" + 
 						"<div class='ng-modal-dialog' ng-style='dialogStyle'>" +
-							"<div class='ng-modal-close' ng-click='hideModal()'>X</div>" +
-							"<div class='ng-modal-icon'><span class='glyphicon glyphicon-plus'></span></div>" +
+							"<div class='ng-modal-icon'><span class='{{icon}}'></span></div>" +
+							"<button ng-click='hideModal()' type='button' class='btn btn-default ng-modal-close' style='padding: 3px 3px;'>" +
+								"<span class='glyphicon glyphicon-remove' aria-hidden='true'></span>" +
+							"</button>" +
 							"<div class='ng-modal-dialog-padding'>" +
 								"<div class='ng-modal-dialog-content' ng-transclude></div>" +
 							"</div>" +
 						"</div>" +
 					"</div>"
+	}
+});
+
+app.directive("validateDate",function() {
+	return {
+	   restrict: 'A',
+	   require: 'ngModel',
+	   link: function(scope, ele, attrs, ctrl){
+			scope.$watch(attrs.ngModel,function(datesObj) {
+				if(datesObj !== undefined) {
+					if(datesObj["Start"] && datesObj["End"]) {
+						var dayEnd = datesObj.End.substring(0,2);
+						var monthEnd = datesObj.End.substring(3,5);
+						var yearEnd = datesObj.End.substring(6,10);
+						var dayStart = datesObj.Start.substring(0,2);
+						var monthStart = datesObj.Start.substring(3,5);
+						var yearStart = datesObj.Start.substring(6,10);
+						if(new Date(monthStart + "/" + dayStart + "/" + yearStart) <= new Date(monthEnd + "/" + dayEnd + "/" + yearEnd)) {
+							ctrl.$setValidity("wrongDatePeriod",true);
+						} else {
+							ctrl.$setValidity("wrongDatePeriod",false);
+						}
+					}
+				}
+			},true);
+	   }
 	}
 });

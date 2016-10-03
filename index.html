@@ -20,7 +20,11 @@
 	<script style="text/javascript" src="js/controller.js"></script>
 	<script style="text/javascript" src="js/directive.js"></script>
 </head>
-<body>
+<body ng-controller="modalDelegatorCtrl">
+	<modal-on-demand></modal-on-demand>
+	<modal-dialog width="300" icon="glyphicon glyphicon-minus-sign" type="alert">
+		<p class="font-alert">Es sind fehlerhafte Eingaben gemacht worden. Fehler vor dem anlegen bitte korrigieren.</p>
+	</modal-dialog>
 	<div class="bar">
 		<div class="padding-10 full">
 			<img src="img/ayn.png" height="30px" align="left" draggable="false" />

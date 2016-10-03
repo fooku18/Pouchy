@@ -4,19 +4,19 @@
 			<div class="padding-bottom-5">
 				<span class="label label-default">IntelliAd-Kampagne</span>
 			</div>
-			<input class="inputField form-control" ng-model="cName" type="text" placeholder="" quicksend hit="keyHit()" />
+			<input class="inputField form-control" ng-model="cName" type="text" placeholder="Kampagnen-Titel..." quicksend hit="keyHit()" />
 		</div>
 		<div class="col-md-8 col-sm-8 block">
 			<div class="padding-bottom-5">
 				<span class="label label-default">Stamm-Url</span>
 			</div>
-			<input class="inputField form-control" ng-model="cRoot" type="text" placeholder="" quicksend hit="keyHit()" />
+			<input class="inputField form-control" ng-model="cRoot" type="text" placeholder="Url..." quicksend hit="keyHit()" />
 		</div>
 		<div class="col-md-8 col-sm-8">
 			<div class="padding-bottom-5">
 				<span class="label label-default">Zusatz-Url</span>
 			</div>
-			<input class="inputField form-control" ng-model="cExt" type="text" placeholder="" quicksend hit="keyHit()" />
+			<input class="inputField form-control" ng-model="cExt" type="text" placeholder="Zusatz..." quicksend hit="keyHit()" />
 		</div>
 		<div class="col-md-4 col-sm-4 padding-top-25">
 			<button class="btn btn-default" ng-click="addItem({'name':cName,'root':cRoot,'ext':cExt})" id="btn-input">Kampagne anlegen</button>

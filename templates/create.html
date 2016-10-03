@@ -1,6 +1,7 @@
 <div ng-controller="mainCtrl" db="cid_DB">
-	<modal-dialog width="650px" height="670px">
+	<modal-dialog width="650px" icon="ng-modal-dialog-content" type="insert">
 		<div class="row" ng-controller="modalCtrl">
+			{{values}}
 			<input type="hidden" ng-model="values._id" />
 			<input type="hidden" ng-model="values._rev" />
 			<div class="col-md-12 col-sm-12 block">
@@ -9,21 +10,37 @@
 				</div>
 				<input ng-model="values.targeturl" class="inputField form-control"  type="text" placeholder="" quicksend hit="keyHit()" mandatory />
 			</div>
-			<div class="col-md-6 col-sm-6 block">
+			<div class="col-md-12 col-sm-12 block">
 				<div class="padding-bottom-5">
 					<span class="label label-default" ng-click="show()">Intern/Extern</span>
 				</div>
-				<select ng-model="values.intext" class="form-control">
+				<select ng-model="values.intext" class="form-control" ng-select="values.intext">
 					<option>Intern</option>
 					<option>Extern</option>
 				</select>
 			</div>
-			<div class="col-md-6 col-sm-6 block" ng-show="isActive(values.intext)">
+			<div class="col-md-12 col-sm-12 block" ng-show="isActive(values.intext)">
 				<div class="padding-bottom-5">
 					<span class="label label-default">Externe Kampagne</span>
 				</div>
-				<select ng-model="values.extcampaign" class="form-control">
+				<select ng-model="values.extcampaign" class="form-control" ng-select="values.extcampaign">
+					<option ng-repeat="i in extCampaigns">{{i.name}}</option>
+				</select>
+			</div>
+			<div class="col-md-12 col-sm-12 block" ng-show="isActive(values.intext)">
+				<div class="padding-bottom-5">
+					<span class="label label-default">IntelliAd Kampagne</span>
+				</div>
+				<select ng-model="values.extintellicampaign" class="form-control" ng-select="values.extintellicampaign">
 					<option ng-repeat="i in intelliAdCampaigns">{{i.name}}</option>
+				</select>
+			</div>
+			<div class="col-md-12 col-sm-12 block" ng-show="!isActive(values.intext)">
+				<div class="padding-bottom-5">
+					<span class="label label-default">Interne Kampagne</span>
+				</div>
+				<select ng-model="values.intcampaign" class="form-control" ng-select="values.intcampaign">
+					<option ng-repeat="i in intCampaigns">{{i.name}}</option>
 				</select>
 			</div>
 			<div class="col-md-12 col-sm-12 block">
@@ -48,7 +65,9 @@
 				<div class="padding-bottom-5">
 					<span class="label label-default">Creative Channel</span>
 				</div>
-				<input ng-model="values.creativechannel" class="inputField form-control" type="text" placeholder="" quicksend hit="keyHit()" />
+				<select ng-model="values.creativechannel" class="form-control">
+					<option ng-repeat="i in creativeChannel">{{i.channel}}</option>
+				</select>
 			</div>
 			<div class="col-md-12 col-sm-12 block">
 				<div class="padding-bottom-5">
@@ -68,7 +87,7 @@
 			</div>
 			-->
 			<div class="col-md-1 col-sm-1 padding-top-25 pull-right">
-				<button class="btn btn-default" ng-click="addToDB({'_id':values._id,'_rev':values._rev,'targeturl':values.targeturl,'intext':values.intext,'extcampaigns':values.extcampaign,'ad':values.ad,'placement':values.placement,'adtype':values.adtype,'creativechannel':values.creativechannel,'adid':values.adid,'randomid':values.randomid})" id="btn-input"><span class="glyphicon glyphicon-floppy-disk"></span></button>
+				<button class="btn btn-default" ng-click="addToDB({'_id':values._id,'_rev':values._rev,'targeturl':values.targeturl,'intext':values.intext,'extcampaign':values.extcampaign,'extintellicampaign':values.extintellicampaign,'intcampaign':values.intcampaign,'ad':values.ad,'placement':values.placement,'adtype':values.adtype,'creativechannel':values.creativechannel,'adid':values.adid,'randomid':values.randomid})" id="btn-input"><span class="glyphicon glyphicon-floppy-disk"></span></button>
 			</div>
 		</div>
 	</modal-dialog>
@@ -80,7 +99,7 @@
 		</div>
 		<div class="col-md-12 col-sm-12">
 			<table class="table table-responsive table-hover">
-				<th>Ziel-Url</th><th>Werbemittel</th><th>CID</th>
+				<th>Ziel-Url</th><th>Werbemittel</th><th>CID</th><th></th>
 				<tr ng-repeat="(key,value) in items track by $index">
 					<td>{{value.doc.targeturl}}</td>
 					<td>{{value.doc.ad}}</td>

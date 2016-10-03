@@ -2,7 +2,6 @@ var myServices = angular.module("myServices",[]);
 myServices.service("$pouchDB",["$rootScope","$q","msgBusService",function($rootScope,$q,msgBusService) {
 	var database = {};
 	var listening = [];
-	var moduleListeners = [];
 	var changeListener;
 	
 	this.getDatabases = function(dbName) {
@@ -23,17 +22,17 @@ myServices.service("$pouchDB",["$rootScope","$q","msgBusService",function($rootS
 		return defer.promise;
 	}
 	
-	this.startListening = function(db) {
-		if(listening.indexOf(db) > -1) return;
-		listening.push(db);
-		changeListener = database[db].changes({
+	this.startListening = function(val) {
+		if(listening.indexOf(val) > -1) return;
+		listening.push(val);
+		changeListener = database[val].changes({
 			since: "now",
 			live: true
 		}).on("change", function(change) {
 			if(!change.deleted) {
-				msgBusService.emit("db:change",change);
+				msgBusService.emit(val + ":change",change);
 			} else {
-				msgBusService.emit("db:delete",change);
+				msgBusService.emit(val + ":delete",change);
 			}
 		});
 	}
@@ -48,14 +47,6 @@ myServices.service("$pouchDB",["$rootScope","$q","msgBusService",function($rootS
 	
 	this.deleteDoc = function(db,id,rev) {
 		return database[db].remove(id,rev);
-	}
-	
-	this.setModuleListeners = function(val) {
-		moduleListeners.push(val);
-	}
-	
-	this.getModuleListeners = function() {
-		return moduleListeners;
 	}
 }]);
 
@@ -84,6 +75,32 @@ myServices.factory("routeNavi",["$route","$location",function($route,$location) 
 	}
 }]);
 
+myServices.service("modalService",["$rootScope","$q","msgBusService",function($rootScope,$q,msgBusService) {
+	var modal = {
+		defer: null
+	}
+	
+	function open(val) {
+		modal.defer = $q.defer();
+		msgBusService.emit("modal:init",val);
+		return modal.defer.promise;
+	}
+	
+	function reject() {
+		modal.defer.reject();
+	}
+	
+	function resolve() {
+		modal.defer.resolve();
+	}
+	
+	return {
+		open: open,
+		resolve: resolve,
+		reject: reject
+	}
+}]);
+
 myServices.factory("msgBusService",["$rootScope",function($rootScope) {
 	var msgBus = {};
 	msgBus.emit = function(msg,data) {
@@ -91,7 +108,28 @@ myServices.factory("msgBusService",["$rootScope",function($rootScope) {
 	};
 	msgBus.get = function(msg,scope,func) {
 		var unbind = $rootScope.$on(msg,func);
-		scope.$on("$destory",unbind);
+		scope.$on("$destroy",unbind);
 	};
 	return msgBus;
 }]);
+
+myServices.factory("hashService",function() {
+	var hash = function(str, asString, seed) {
+		var i, l,
+			hval = (seed === undefined) ? 0x811c9dc5 : seed;
+
+		for (i = 0, l = str.length; i < l; i++) {
+			hval ^= str.charCodeAt(i);
+			hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+		}
+		if( asString ){
+			// Convert to 8 digit hex string
+			return ("0000000" + (hval >>> 0).toString(16)).substr(-8);
+		}
+		return hval >>> 0;
+	};
+	
+	return {
+		hash: hash
+	};
+});

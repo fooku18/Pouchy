@@ -1,44 +1,94 @@
 <div ng-controller="mainCtrl" db="campaigns_DB">
-	<div class="row padding-top-10 padding-bottom-10">
-		<div class="col-md-3 col-sm-3">
-			<div class="padding-bottom-5">
-				<span class="label label-default">Kampagnen-Titel</span>
+	<form name="userForm" ng-submit="addItem({'name':c.Name,'type':c.Type,'intext':c.IntExt,'start':c.date.Start,'end':c.date.End})" novalidate>
+		<div class="row padding-top-10 padding-bottom-10">
+			<div class="col-md-3 col-sm-3 form-group relative" ng-class="{'has-error': userForm.cName.$invalid && !userForm.cName.$pristine }">
+				<div class="padding-bottom-5">
+					<label class="label label-default">Kampagnen-Titel</label>
+				</div>
+				<input name="cName" class="inputField form-control" ng-model="c.Name" type="text" placeholder="Titel..." required />
+				<div class="absolute top-60 z-index-10" ng-show="userForm.cName.$invalid && !userForm.cName.$pristine">
+					<div class="padding-left-5">
+						<div class="my-arrow-up"></div>
+					</div>
+					<p class="help-block my-info-box">Der Kampagnen-Titel muss mindestens ein Zeichen lang sein.</p>
+				</div>
 			</div>
-			<input class="inputField form-control" ng-model="cName" type="text" placeholder="Kampagne..." quicksend hit="keyHit()" />
-		</div>
-		<div class="col-md-3 col-sm-3">
-			<div class="padding-bottom-5">
-				<span class="label label-default">Kampagnen-Typ</span>
+			<div class="col-md-2 col-sm-2 form-group" ng-class="{'has-error': userForm.cType.$invalid && !userForm.cType.$pristine }">
+				<div class="padding-bottom-5">
+					<label class="label label-default">Kampagnen-Typ</label>
+				</div>
+				<select name="cType" ng-model="c.Type" class="form-control inputField" ng-minlength="1">
+					<option>Conversion</option>
+					<option>Image</option>
+				</select>
+				<div class="absolute top-60 z-index-10" ng-show="userForm.cType.$invalid && !userForm.cType.pristine">
+					<div class="padding-left-5">
+						<div class="my-arrow-up"></div>
+					</div>
+					<p class="help-block my-info-box">Eine eindeutige Auswahl muss getroffen werden.</p>
+				</div>
 			</div>
-			<select ng-model="cType" class="form-control">
-				<option>Conversion</option>
-				<option>Image</option>
-			</select>
-		</div>
-		<div class="col-md-2 col-sm-2">
-			<div class="padding-bottom-5">
-				<span class="label label-default">Kampagnenstart</span>
+			<div class="col-md-2 col-sm-2 form-group" ng-class="{'has-error': userForm.cIntExt.$invalid && !userForm.cIntExt.$pristine }">
+				<div class="padding-bottom-5">
+					<span class="label label-default">Interne/Externe Kampagne</span>
+				</div>
+				<select name="cIntExt" ng-model="c.IntExt" class="form-control inputField" ng-minlength="1">
+					<option>Intern</option>
+					<option>Extern</option>
+				</select>
+				<div class="absolute top-60 z-index-10" ng-show="userForm.cIntExt.$invalid && !userForm.cIntExt.$pristine">
+					<div class="padding-left-5">
+						<div class="my-arrow-up"></div>
+					</div>
+					<p class="help-block my-info-box">Eine eindeutige Auswahl muss getroffen werden.</p>
+				</div>
 			</div>
-			<input class="inputField form-control" type="text" datepicker="" ng-model="cStart" />
-		</div>
-		<div class="col-md-2 col-sm-2">
-			<div class="padding-bottom-5">
-				<span class="label label-default">Kampagnenende</span> 
+			<div ng-model="c.date" validate-date>
+				<div class="col-md-2 col-sm-2 form-group" ng-class="{'has-error': userForm.cStart.$invalid && !$userForm.cStart.pristine}">
+					<div class="padding-bottom-5">
+						<label class="label label-default">Kampagnenstart</label>
+					</div>
+					<input name="cStart" class="inputField form-control" type="text" datepicker="" ng-model="c.date.Start" placeholder="Start..." ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" />
+					<div class="absolute top-60 z-index-10" ng-show="userForm.cStart.$invalid && !$userForm.cStart.pristine">
+						<div class="padding-left-5">
+							<div class="my-arrow-up"></div>
+						</div>
+						<p class="help-block my-info-box">Falsches Datum</p>
+					</div>
+				</div>
+				<div class="col-md-2 col-sm-2 form-group" ng-class="{'has-error':userForm.cEnd.$invalid && !userForm.cEnd.pristine }">
+					<div class="padding-bottom-5">
+						<span class="label label-default">Kampagnenende</span> 
+					</div>
+					<input name="cEnd" class="inputField form-control" type="text" datepicker="" ng-model="c.date.End" placeholder="Ende..." ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" />
+					<div class="absolute top-60 z-index-10" ng-show="userForm.cEnd.$invalid && !$userForm.cEnd.pristine">
+						<div class="padding-left-5">
+							<div class="my-arrow-up"></div>
+						</div>
+						<p class="help-block my-info-box">Falsches Datum</p>
+					</div>
+					<div class="absolute top-60 z-index-10 has-error" ng-show="userForm.$error.wrongDatePeriod">
+						<div class="padding-left-5">
+							<div class="my-arrow-up"></div>
+						</div>
+						<p class="help-block my-info-box">Anfangsdatum muss vor Enddatum liegen</p>
+					</div>
+				</div>
 			</div>
-			<input class="inputField form-control" type="text" datepicker="" ng-model="cEnd" />
+			<div class="col-md-1 col-sm-1 padding-top-25">
+				<button class="btn btn-default" type="submit" id="btn-input">anlegen</button>
+			</div>
 		</div>
-		<div class="col-md-1 col-sm-1 padding-top-25">
-			<button class="btn btn-default" ng-click="addItem({'name':cName,'type':cType,'start':cStart,'end':cEnd})" id="btn-input">Kampagne anlegen</button>
-		</div>
-	</div>
+	</form>
 	<div class="row">
 		<div class="col-md-12 col-sm-12">
 			<table class="table table-responsive table-hover">
-				<th>ID</th><th>Titel</th><th>Typ</th><th>Start</th><th>Ende</th><th style="text-align: center;">Löschen</th>
+				<th>ID</th><th>Titel</th><th>Typ</th><th>Intern/Extern</th><th>Start</th><th>Ende</th><th style="text-align: center;">Löschen</th>
 				<tr ng-repeat="(key,value) in items track by $index">
-					<td>{{value.doc._id}}</td>
+					<td>{{value.doc.campid}}</td>
 					<td>{{value.doc.name}}</td>
 					<td>{{value.doc.type}}</td>
+					<td>{{value.doc.intext}}</td>
 					<td>{{value.doc.start}}</td>
 					<td>{{value.doc.end}}</td>
 					<td align="center">

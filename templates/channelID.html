@@ -4,16 +4,16 @@
 			<div class="padding-bottom-5">
 				<span class="label label-default">Kanal-ID</span>
 			</div>
-			<input class="inputField form-control" ng-model="cChannelID" type="text" placeholder="" quicksend hit="keyHit()" />
+			<input class="inputField form-control" ng-model="cChannelID" type="text" placeholder="ID..." quicksend hit="keyHit()" />
 		</div>
 		<div class="col-md-8 col-sm-8 block">
 			<div class="padding-bottom-5">
 				<span class="label label-default">Kanal</span>
 			</div>
-			<input class="inputField form-control" ng-model="cChannel" type="text" placeholder="" quicksend hit="keyHit()" />
+			<input class="inputField form-control" ng-model="cChannel" type="text" placeholder="Kanalname..." quicksend hit="keyHit()" />
 		</div>
 		<div class="col-md-4 col-sm-4 padding-top-25">
-			<button class="btn btn-default" ng-click="addItem({'channelID':cChannel,'channel':cChannel})" id="btn-input">Kanal-ID anlegen</button>
+			<button class="btn btn-default" ng-click="addItem({'channelID':cChannelID,'channel':cChannel})" id="btn-input">Kanal-ID anlegen</button>
 		</div>
 	</div>
 	<div class="row">
