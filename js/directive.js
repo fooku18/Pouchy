@@ -23,18 +23,6 @@ app.directive("datepicker",function() {
 	}
 });
 
-app.directive("quicksend",function() {
-	return {
-		restrict: "A",
-		scope: {hit: "&"},
-		link: function(scope,elem,attr) {
-			elem.on("keyup",function(e) {
-				if(e.keyCode === 13) scope.hit();
-			});
-		}
-	}
-});
-
 app.directive("sitetitle",function(routeNavi,$location) {
 	return {
 		restrict: "E",
@@ -51,108 +39,55 @@ app.directive("sitetitle",function(routeNavi,$location) {
 	}
 });
 
-app.directive("popdown",function(msgBusService) {
-	return {
-		restrict: "A",
-		scope: {
-			options: "=",
-			initial: "="
-		},
-		controller: function($scope) {
-			$scope.selected = $scope.initial;
-			$scope.stat = false;
-			$scope.switcher = function() {
-				$scope.stat = !$scope.stat;
-			}
-			$scope.selectIt = function(val) {
-				$scope.selected = val;
-			}
-		},
-		template: 	"<div class='popdown' ng-click='switcher()'>{{selected}}" +
-						"<div class='arrow'><span class='glyphicon glyphicon-chevron-down' aria-hidden='true'></span></div>" +
-						"<div ng-show='stat' class='poplist'>" + 
-							"<div class='popitem' ng-repeat='i in options' ng-click='selectIt(i)'>" +
-								"<span>{{i}}</span>" + 
-							"</div>" +
-						"</div>" +
-					"</div>"
-	}
-});
-
 app.directive("modalOnDemand",["$rootScope","msgBusService","modalService",function($rootScope,msgBusService,modalService) {
 	return {
 		restrict: "E",
 		scope: {},
 		template: 	"<div ng-show='modalShow'>" +
-						"<div class='modal-overlay'></div>" +
-						"<div class='modal-dialog'>" + 
-							"<div class='modal-bar'>&nbsp;</div>" +
-							"<div class='modal-icon'><span ></span></div>" +
-							"<button ng-click='modalHide()' type='button' class='btn btn-default ng-modal-close' style='padding: 3px 3px;'>" +
+						"<div class='custom-modal-overlay'></div>" +
+						"<div class='custom-modal-dialog'>" + 
+							"<div class='custom-modal-bar {{barColor}}'>&nbsp;</div>" +
+							"<div class='custom-modal-icon'><span ></span></div>" +
+							"<button ng-click='modalHide()' type='button' class='btn btn-default custom-modal-close' style='padding: 3px 3px;'>" +
 								"<span class='glyphicon glyphicon-remove' aria-hidden='true'></span>" +
 							"</button>" +
-							"<div class='modal-dialog-padding'>" +
-								"<div class='modal-dialog-content'>" +
+							"<div class='custom-modal-dialog-padding'>" +
+								"<div class='custom-modal-dialog-content'>" +
 									"<ng-include src='modalTemplate' />" +
 								"</div>" + 
 							"</div>" +
 						"</div>" +
 					"</div>",
 		link: function(scope,elem,attr) {
+			scope.barColor = "custom-modal-bar-green";
 			scope.modalShow = null;
 			scope.modalHide = function() {
 				modalService.reject();
 				scope.modalShow = null;
+				//scope.modalTemplate = "templates/modal/invalid.html";
+			};
+			scope.confirm = function() {
+				modalService.resolve();
+				scope.modalShow = null;
 			};
 			scope.modalTemplate = "";
-			msgBusService.get("modal:init",scope,function(event,data) {
-				scope.modalShow = data;
-				scope.modalTemplate = "templates/modal/" + data + ".html";
+			msgBusService.get("modal:init",scope,function(event,options) {
+				scope.values = {};
+				scope.barColor = "custom-modal-bar-" + options.barColor;
+				if(options.data) scope.values = options.data;
+				if(options.template === scope.modalTemplateOld) {
+					scope.modalShow = true;
+				} else {
+					scope.modalTemplate = "templates/modal/" + options.template + ".html";
+				}
+				scope.modalTemplateOld = options.template;
+			});
+			scope.$on('$includeContentLoaded', function () {
+				scope.modalShow = true;
 			});
 		}
 	}
 }]);
-
-app.directive('modalDialog', function() {
-	return {
-		restrict: 'E',
-		scope: {},
-		replace: true,
-		transclude: true,
-		link: function(scope, element, attrs,ctrl,transcludeFn) {
-			scope.dialogStyle = {};
-			if(attrs.width) scope.dialogStyle.width = attrs.width;
-			if(attrs.height) scope.dialogStyle.height = attrs.height;
-			if(attrs.icon) scope.icon = attrs.icon;
-			scope.modalType = attrs.type;
-		},
-		controller: function($scope,$rootScope,msgBusService) {
-			$scope.show = false;
-			$scope.hideModal = function() {
-				$scope.show = false;
-			};
-			msgBusService.get("modal:toggle",$scope,function(event,data) {
-				if($scope.modalType === "alert") {
-					$scope.show = true;
-				} else if($scope.modalType === "insert") {
-					$scope.show = true;
-				}
-			});
-		},
-		template: 	"<div class='ng-modal' ng-show='show'>" +
-						"<div class='ng-modal-overlay'></div>" + 
-						"<div class='ng-modal-dialog' ng-style='dialogStyle'>" +
-							"<div class='ng-modal-icon'><span class='{{icon}}'></span></div>" +
-							"<button ng-click='hideModal()' type='button' class='btn btn-default ng-modal-close' style='padding: 3px 3px;'>" +
-								"<span class='glyphicon glyphicon-remove' aria-hidden='true'></span>" +
-							"</button>" +
-							"<div class='ng-modal-dialog-padding'>" +
-								"<div class='ng-modal-dialog-content' ng-transclude></div>" +
-							"</div>" +
-						"</div>" +
-					"</div>"
-	}
-});
 
 app.directive("validateDate",function() {
 	return {
@@ -177,5 +112,15 @@ app.directive("validateDate",function() {
 				}
 			},true);
 	   }
+	}
+});
+
+app.directive("widCheck",function() {
+	return {
+		link: function(scope,elemt,attr) {
+			elemt.bind("change",function() {
+				scope.checkWID(elemt[0].value,attr.widCheck);
+			});
+		}
 	}
 });

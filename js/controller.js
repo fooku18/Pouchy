@@ -8,19 +8,19 @@ app.controller("naviCtrl",["$scope","$location","$rootScope",function($scope,$lo
 }]);
 
 app.controller("modalDelegatorCtrl",["$scope","$rootScope","modalService",function($scope,$rootScope,modalService) {
-	$scope.$on("modal:initService",function(event,data) {
-		modalService.open(data).then(function() {
-			console.log("resolved");
-		},function() {
-			console.log("rejected");
-		});
-	});
-	$scope.open = function() {
+	//$scope.$on("modal:initService",function(event,data) {
+	//	modalService.open(data).then(function() {
+	//		console.log("resolved");
+	//	},function() {
+	//		console.log("rejected");
+	//	});
+	//});
+	//$scope.open = function() {
 		
-	}
+	//}
 }]);
 
-app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBusService","$attrs","docShareService",function($scope,$rootScope,$pouchDB,hashService,msgBusService,$attrs,docShareService) {
+app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBusService","$attrs","docShareService","modalService",function($scope,$rootScope,$pouchDB,hashService,msgBusService,$attrs,docShareService,modalService) {
 	var db = $attrs.db;
 	$scope.items = [];
 	
@@ -28,23 +28,37 @@ app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBu
 		$pouchDB.startListening(val);
 	}
 	
-	$scope.addItem = function(data) {
-		if($scope.userForm.$valid) {
-			if(!data["_id"]) data["_id"] = new Date().toISOString();
-			if(db === "campaigns_DB") {
-				data["campid"] = hashService.hash(data["_id"]).toString();
-			}
-			$pouchDB.addDefer(db,data).then(function(doc) {
-				$(".inputField").each(function() {
-					//$(this).val("");
-					$scope.c = {};
-				});
-				console.log(doc._id + " created!");
+	$scope.validation = function(val,data) {
+		if(val) {
+			$scope.addItem(data);
+			modalService.open({template:"success",barColor:"green"}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
 			});
 		} else {
-			//$scope.$emit("modal:initService","invalid");
-			
+			modalService.open({template:"invalid",barColor:"red"}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
+			});
 		}
+	}
+	
+	$scope.addItem = function(data) {
+		if(!data["_id"] || data["_id"] === "") data["_id"] = new Date().toISOString();
+		if(db === "campaigns_db") {
+			data["campid"] = hashService.hash(data["_id"]).toString();
+		}
+		$pouchDB.addDefer(db,data).then(function(doc) {
+			$(".inputField").each(function() {
+				$scope.c = {};
+				$scope.userForm.$setPristine();
+			});
+			console.log(doc._id + " created!");
+		});
 	};
 	
 	$scope.fetchAll = function(val) {
@@ -77,23 +91,24 @@ app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBu
 				});
 			}
 		);
-		if(db === "cid_DB") {
-			msgBusService.get("modal:dbAdd",$scope,
-				function(event,data) {
-					$scope.addItem(data);
-				}
-			);
-		}
 	}
 	
-	$scope.deleteItem = function(id,rev) {
-		var conf = confirm("Sind Sie sicher das Sie den Eintrag löschen möchten?");
-		if(conf == true) $pouchDB.deleteDoc(db,id,rev);
+	$scope.deleteItem = function(doc) {
+		modalService.open({template:"delete",barColor:"red",data:doc.info}).then(function() {
+			$pouchDB.deleteDoc(db,doc.id,doc.rev);
+			console.log(doc.id + " deleted");
+		},function() {
+			console.log("Aborted");
+		});
 	}
 	
 	$scope.showModal = function(data) {
-		docShareService.setValues(data);
-		msgBusService.emit("modal:toggle");
+		modalService.open({template:"create",barColor:"blue",data:data}).then(function(data) {
+			$scope.addItem(data);
+			console.log("resolved");
+		}, function() {
+			console.log("rejected");
+		});
 	}
 	
 	//initialize
@@ -101,87 +116,150 @@ app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBu
 	$scope.fetchInitial();
 }]);
 
-app.controller("modalCtrl",["$scope","docShareService","msgBusService","$pouchDB",function($scope,docShareService,msgBusService,$pouchDB) {
-	$scope.values = {
-		'intext': "",
-		'extcampaign': "",
-		'extintellicampaign': "",
-		'intcampaign': "",
-		'targeturl': "",
-		'ad': "",
-		'placement': "",
-		'adtype': "",
-		'creativeChannel': "",
-		'adid': "",
-		'randomid': ""
-	};
-	console.log($scope.values);
+app.controller("cidCtrl",["$scope","$rootScope","docShareService","msgBusService","$pouchDB","modalService",function($scope,$rootScope,docShareService,msgBusService,$pouchDB,modalService) {
 	$scope.intelliAdCampaigns = [];
 	$scope.extCampaigns = [];
 	$scope.intCampaigns = [];
 	$scope.creativeChannel = [];
-	msgBusService.get("modal:toggle",$scope,
-		function(event) {
-			if($scope.visited != 1) {
-				$pouchDB.fetchAllDocs("intelliAd_DB").then(function(data) {
-					for(var i=0;i<=data.rows.length-1;i++) {
-						($scope.intelliAdCampaigns).push({'name':data.rows[i].doc.name,'root':data.rows[i].doc.root,'ext':data.rows[i].ext});
-					};
-				}).then(function() {
-					return $pouchDB.fetchAllDocs("campaigns_DB");
-				}).then(function(data) {
-					for(var i=0;i<=data.rows.length-1;i++) {
-						if(data.rows[i].doc.intext === "Extern") {
-							($scope.extCampaigns).push({'name':data.rows[i].doc.name});
-						} else {
-							($scope.intCampaigns).push({'name':data.rows[i].doc.name});
-						}
-					}
-				}).then(function() {
-					return $pouchDB.fetchAllDocs("channelID_DB");
-				}).then(function(data) {
-					for(var i=0;i<=data.rows.length-1;i++) {
-						($scope.creativeChannel).push({'channelID':data.rows[i].doc.channelID,'channel':data.rows[i].doc.channel});
-					}
-					$scope.values = docShareService.getValues();
-					$scope.visited = 1;
-					$scope.$digest();
-				});
-			}
-		}
-	);
 	
+	$scope.checkWID = function(value,intext) {
+		var campaign;
+		(intext === "extern") ? campaign = "extcampaign" : campaign = "intcampaign";
+		$pouchDB.fetchAllDocs("cid_db")
+			.then(function(data) {
+				var counter = 0;
+				for(var i = 0; i<=data.rows.length-1;i++) {
+					if(data.rows[i].doc[campaign] === value) {
+						counter++;
+					}
+				}
+				counter++;
+				var counterLength = counter.toString().length;
+				var wid = Array(6-counterLength).join("0") + counter.toString();
+				$scope.values.adid = wid;
+				$scope.$digest();
+			});
+	};
+	
+	//fetch other db information
+	(function() {$pouchDB.fetchAllDocs("intelliad_db").
+		then(function(data) {
+			for(var i=0;i<=data.rows.length-1;i++) {
+				($scope.intelliAdCampaigns).push({
+					'name':data.rows[i].doc.name,
+					'root':data.rows[i].doc.root,
+					'ext':data.rows[i].doc.ext
+				});
+			};
+		}).then(function() {
+			return $pouchDB.fetchAllDocs("campaigns_db");
+		}).then(function(data) {
+			for(var i=0;i<=data.rows.length-1;i++) {
+				if(data.rows[i].doc.intext === "Extern") {
+					($scope.extCampaigns).push(data.rows[i].doc);
+				} else {
+					($scope.intCampaigns).push(data.rows[i].doc);
+				}
+			}
+		}).then(function() {
+			return $pouchDB.fetchAllDocs("channelid_db");
+		}).then(function(data) {
+			for(var i=0;i<=data.rows.length-1;i++) {
+				($scope.creativeChannel).push(data.rows[i].doc);
+			}
+			$scope.$apply();
+		});
+	}())
+
 	$scope.isActive = function(val) {
 		if(val === "Extern") {
+			$scope.values.intcampaign = "";
 			return true;
 		} else {
+			$scope.values.extcampaign = "";
+			$scope.values.extintellicampaign = "";
 			return false;
 		}
 	}
 	
-	$scope.addToDB = function(data) {
-		$scope.doCIDLogic(data);
-		//msgBusService.emit("modal:dbAdd",data);
+	$scope.validation = function(val,data) {
+		if(val) {
+			$scope.addToDB(data);
+		} else {
+			modalService.open({template:"invalid",barColor:"green"}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
+			});
+		}
 	}
 	
-	//CID Generating Logic
+	$scope.addToDB = function(data) {
+		addedData = $scope.doCIDLogic(data);
+		modalService.resolve(data);
+		$scope.modalHide();
+	}
+	
+	//CID generating logic
 	$scope.doCIDLogic = function(data) {
-		console.log(data);
-		if(typeof(data.extcampaign) !== "undefined") {
+		if(typeof(data.extcampaign) !== "undefined" && data.extcampaign !== "") {
+			//add intelliadCamp to new Dataset
 			for(var i=0;i<=$scope.intelliAdCampaigns.length-1;i++) {
-				if($scope.intelliAdCampaigns[i].name === data.extcampaign) {
+				if($scope.intelliAdCampaigns[i].name === data.extintellicampaign) {
 					data.root = $scope.intelliAdCampaigns[i].root;
 					data.ext = $scope.intelliAdCampaigns[i].ext;
 					break;
 				}
 			}
+			//add EXTcampaignID to new Dataset
+			for(var i=0;i<=$scope.extCampaigns.length-1;i++) {
+				if($scope.extCampaigns[i].name === data.extcampaign) {
+					data.campaignID = $scope.extCampaigns[i].campid;
+					data.campaignType = $scope.extCampaigns[i].type.charAt(0).toLowerCase();
+					data.campaignStart = $scope.extCampaigns[i].start;
+					data.campaignEnd = $scope.extCampaigns[i].end;
+					data.campaignIntExtSuffix = "e";
+					break;
+				}
+			}
+		} else {
+			//add INTcampaignID to new Dataset
+			for(var i=0;i<=$scope.intCampaigns.length-1;i++) {
+				if($scope.intCampaigns[i].name === data.intcampaign) {
+					data.campaignID = $scope.intCampaigns[i].campid;
+					data.campaignType = $scope.intCampaigns[i].type.charAt(0).toLowerCase();
+					data.campaignStart = $scope.intCampaigns[i].start;
+					data.campaignEnd = $scope.intCampaigns[i].end;
+					data.campaignIntExtSuffix = "i";
+					break;
+				}
+			}
 		}
+		//add ChannelID to new Dataset
 		for(var i=0;i<=$scope.creativeChannel.length-1;i++) {
 			if($scope.creativeChannel[i].channel === data.creativechannel) {
 				data.channelID = $scope.creativeChannel[i].channelID;
+				data.channel = $scope.creativeChannel[i].channel;
 			}
 		}
 		
+		//generate CID 
+		//get globals
+		var globals = JSON.parse(document.getElementById("dataConfig").textContent);
+		var domainToken = globals.cidConfig.domainToken;
+		var organizationToken = globals.cidConfig.organizationToken;
+		//if question mark exists then add ampersand and concatenate
+		var cid = data.campaignType + "_" + domainToken + "_" + data.channelID + data.campaignIntExtSuffix + "_" + organizationToken + "_" + data.campaignID + "_" + data.adid + "_" + data.randomid;
+		if(data.targeturl.indexOf("?") > -1) {
+			var FQ = data.targeturl + "&" + cid;
+		} else {
+		//if no question mark in string then add ampersand + cid
+			var FQ = data.targeturl + "?" + cid;
+		}
+		data.FQ = FQ;
+		data.cid = cid;
 		
+		return data;
 	}
 }]);

@@ -80,18 +80,20 @@ myServices.service("modalService",["$rootScope","$q","msgBusService",function($r
 		defer: null
 	}
 	
-	function open(val) {
+	function open(options) {
 		modal.defer = $q.defer();
-		msgBusService.emit("modal:init",val);
+		msgBusService.emit("modal:init",options);
 		return modal.defer.promise;
 	}
 	
-	function reject() {
-		modal.defer.reject();
+	function reject(data) {
+		var tunnel = data || "";
+		modal.defer.reject(tunnel);
 	}
 	
-	function resolve() {
-		modal.defer.resolve();
+	function resolve(data) {
+		var tunnel = data || "";
+		modal.defer.resolve(tunnel);
 	}
 	
 	return {

@@ -1,5 +1,5 @@
-<div ng-controller="mainCtrl" db="campaigns_DB">
-	<form name="userForm" ng-submit="addItem({'name':c.Name,'type':c.Type,'intext':c.IntExt,'start':c.date.Start,'end':c.date.End})" novalidate>
+<div ng-controller="mainCtrl" db="campaigns_db">
+	<form name="userForm" ng-submit="validation(userForm.$valid,{'name':c.Name,'type':c.Type,'intext':c.IntExt,'start':c.date.Start,'end':c.date.End})" novalidate>
 		<div class="row padding-top-10 padding-bottom-10">
 			<div class="col-md-3 col-sm-3 form-group relative" ng-class="{'has-error': userForm.cName.$invalid && !userForm.cName.$pristine }">
 				<div class="padding-bottom-5">
@@ -92,7 +92,7 @@
 					<td>{{value.doc.start}}</td>
 					<td>{{value.doc.end}}</td>
 					<td align="center">
-						<button ng-click="deleteItem(value.doc._id,value.doc._rev)" type="button" class="btn btn-default" style="padding: 1px 1px;">
+						<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'Kampagne: &quot;' + value.doc.name + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
 							<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
 						</button>
 					</td>

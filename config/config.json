@@ -1,0 +1,15 @@
+{
+	"databaseConfig": {
+		"databases": ["campaigns_db","intelliad_db","channelid_db","cid_db"],
+		"mode": "local",
+		"dbMode": "couchDB",
+		"remoteUrl": ""
+	},
+	"cidConfig": {
+		"domainToken": "dhlmp",
+		"organizationToken": "dpcom"
+	},
+	"analyticsConfig": {
+	
+	}
+}

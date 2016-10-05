@@ -1,0 +1,131 @@
+<div class="row" ng-controller="cidCtrl">
+	<h3>Bearbeitung</h3>
+	<form name="userForm" ng-submit="validation(userForm.$valid,{
+			'_id':values._id, 
+			'_rev':values._rev, 
+			'targeturl':values.targeturl, 
+			'intext':values.intext, 
+			'extcampaign':values.extcampaign, 
+			'extintellicampaign':values.extintellicampaign, 
+			'intcampaign':values.intcampaign, 
+			'ad':values.ad, 
+			'placement':values.placement, 
+			'adtype':values.adtype, 
+			'creativechannel':values.creativechannel, 
+			'adid':values.adid, 
+			'randomid':values.randomid 
+		})" novalidate>
+		<input type="hidden" ng-model="values._id" />
+		<input type="hidden" ng-model="values._rev" />
+		<div class="col-md-12 col-sm-12 block form-group" ng-class="{'has-error': userForm.cTargeturl.$invalid && userForm.cTargeturl.$touched, 'has-success': userForm.cTargeturl.$valid}">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Ziel-Url</span>
+			</div>
+			<input name="cTargeturl" ng-model="values.targeturl" class="inputField form-control"  type="text" placeholder="" ng-pattern="/^https?:\/\/.*\..*/" required/>
+			<div class="absolute top-60 z-index-10" ng-show="userForm.cTargeturl.$invalid && userForm.cTargeturl.$touched">
+				<div class="padding-left-5">
+					<div class="my-arrow-up"></div>
+				</div>
+				<p class="help-block my-info-box">Die Zieladresse muss eine gültige URL sein <br /> <i>http[s]://...</i> </p>
+			</div>
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group" ng-class="{'has-error': userForm.cIntext.$invalid && userForm.cIntext.$touched, 'has-success': userForm.cIntext.$valid}" >
+			<div class="padding-bottom-5">
+				<span class="label label-default" ng-click="show()">Intern/Extern</span>
+			</div>
+			<select name="cIntext" ng-model="values.intext" class="form-control" ng-select="values.intext" ng-pattern="/.*/" required>
+				<option>Intern</option>
+				<option>Extern</option>
+			</select>
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group" ng-show="isActive(values.intext)" ng-class="{'has-error': userForm.cExtcampaign.$invalid && userForm.cExtcampaign.$touched, 'has-success': userForm.cExtcampaign.$valid}" >
+			<div class="padding-bottom-5">
+				<span class="label label-default">Externe Kampagne</span>
+			</div>
+			<select name="cExtcampaign" ng-model="values.extcampaign" class="form-control" ng-select="values.extcampaign" wid-check="extern" ng-required="isActive(values.intext)" ng-pattern="/.*/">
+				<option ng-repeat="i in extCampaigns">{{i.name}}</option>
+			</select>
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group" ng-show="isActive(values.intext)" ng-class="{'has-error': userForm.cExtintellicampaign.$invalid && userForm.cExtintellicampaign.$touched, 'has-success': userForm.cExtintellicampaign.$valid}" >
+			<div class="padding-bottom-5">
+				<span class="label label-default">IntelliAd Kampagne</span>
+			</div>
+			<select name="cExtintellicampaign" ng-model="values.extintellicampaign" class="form-control" ng-select="values.extintellicampaign" ng-required="isActive(values.intext)" ng-pattern="/.*/">
+				<option ng-repeat="i in intelliAdCampaigns">{{i.name}}</option>
+			</select>
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group" ng-show="!isActive(values.intext)" ng-class="{'has-error': userForm.cIntcampaign.$invalid && userForm.cIntcampaign.$touched, 'has-success': userForm.cIntcampaign.$valid}">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Interne Kampagne</span>
+			</div>
+			<select name="cIntcampaign" ng-model="values.intcampaign" class="form-control" ng-select="values.intcampaign" wid-check="intern" ng-required="!isActive(values.intext)" ng-pattern="/.*/">
+				<option ng-repeat="i in intCampaigns">{{i.name}}</option>
+			</select>
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group" ng-class="{'has-error': userForm.cAd.$invalid && userForm.cAd.$touched, 'has-success': userForm.cAd.$valid}">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Werbemittel</span>
+			</div>
+			<input name="cAd" ng-model="values.ad" class="inputField form-control" type="text" placeholder="" ng-minlength="1" required />
+			<div class="absolute top-60 z-index-10" ng-show="userForm.cAd.$invalid && userForm.cAd.$touched">
+				<div class="padding-left-5">
+					<div class="my-arrow-up"></div>
+				</div>
+				<p class="help-block my-info-box">Das Werbemittel muss mindestens ein Zeichen haben</p>
+			</div>
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Werbemittel-ID</span>
+			</div>
+			<input name="cAdid" ng-model="values.adid" class="inputField form-control" type="text" placeholder="" disabled />
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group" ng-class="{'has-error': userForm.cAdtype.$invalid && userForm.cAdtype.$touched, 'has-success': userForm.cAdtype.$valid}">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Werbemittel Typ</span>
+			</div>
+			<input name="cAdtype" ng-model="values.adtype" class="inputField form-control" type="text" placeholder="" ng-minlength="1" required />
+			<div class="absolute top-60 z-index-10" ng-show="userForm.cAdtype.$invalid && userForm.cAdtype.$touched">
+				<div class="padding-left-5">
+					<div class="my-arrow-up"></div>
+				</div>
+				<p class="help-block my-info-box">Der Werbemittel Typ muss mindestens ein Zeichen haben</p>
+			</div>
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group" ng-class="{'has-error': userForm.cPlacement.$invalid && userForm.cPlacement.$touched, 'has-success': userForm.cPlacement.$valid}">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Platzierung</span>
+			</div>
+			<input name="cPlacement" ng-model="values.placement" class="inputField form-control" type="text" placeholder="" ng-minlength="1" required />
+			<div class="absolute top-60 z-index-10" ng-show="userForm.cPlacement.$invalid && userForm.cPlacement.$touched">
+				<div class="padding-left-5">
+					<div class="my-arrow-up"></div>
+				</div>
+				<p class="help-block my-info-box">Die Platzierung muss mindestens ein Zeichen haben</p>
+			</div>
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group" ng-class="{'has-error': userForm.cCreativechannel.$invalid && userForm.cCreativechannel.$touched, 'has-success': userForm.cCreativechannel.$valid}">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Creative Channel</span>
+			</div>
+			<select name="cCreativechannel" ng-model="values.creativechannel" class="form-control" ng-pattern="/.*/" required>
+				<option ng-repeat="i in creativeChannel">{{i.channel}}</option>
+			</select>
+		</div>
+		<div class="col-md-12 col-sm-12 block form-group" ng-class="{'has-error': userForm.cRandomid.$invalid && !userForm.cRandomid.$pristine, 'has-success': userForm.cRandomid.$valid}">
+			<div class="padding-bottom-5">
+				<span class="label label-default">Zufalls-ID</span>
+			</div>
+			<input name="cRandomid" ng-model="values.randomid" class="inputField form-control" type="text" placeholder="" ng-pattern="/^[A-Z]{2}-[A-Z0-9]{2,3}$/" required />
+			<div class="absolute top-60 z-index-10" ng-show="userForm.cRandomid.$invalid && !userForm.cRandomid.$pristine">
+				<div class="padding-left-5">
+					<div class="my-arrow-up"></div>
+				</div>
+				<p class="help-block my-info-box">Die Zufalls-ID muss von der Form 'XX-YY[Y]' sein. <br /> X:Großbuchstabe; Y:Großbuchstabe oder Zahl </p>
+			</div>
+		</div>
+		<div class="col-md-1 col-sm-1 padding-top-25">
+			<button type="submit" class="btn btn-default" id="btn-input"><span class="glyphicon glyphicon-floppy-disk"></span></button>
+		</div>
+	</form>
+</div>
