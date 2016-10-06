@@ -74,6 +74,10 @@ select {
 	padding-left: 5px;
 }
 
+.padding-left-25 {
+	padding-left: 25px;
+}
+
 .popdown, .arrow {
 	display: block;
 	position: relative;
@@ -144,6 +148,10 @@ select {
 	position: absolute;
 }
 
+.inline-block {
+	display: inline-block;
+}
+
 .top-60 {
 	top: 60px;
 }
@@ -181,4 +189,12 @@ select {
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   border-bottom: 5px solid #a94442;
+}
+
+.small-letters {
+	font-size: 50%;
+}
+
+.white  {
+	color: #ffffff;
 }

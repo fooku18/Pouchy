@@ -64,7 +64,6 @@ app.directive("modalOnDemand",["$rootScope","msgBusService","modalService",funct
 			scope.modalHide = function() {
 				modalService.reject();
 				scope.modalShow = null;
-				//scope.modalTemplate = "templates/modal/invalid.html";
 			};
 			scope.confirm = function() {
 				modalService.resolve();
@@ -120,6 +119,51 @@ app.directive("widCheck",function() {
 		link: function(scope,elemt,attr) {
 			elemt.bind("change",function() {
 				scope.checkWID(elemt[0].value,attr.widCheck);
+			});
+		}
+	}
+});
+
+app.directive("switch",function() {
+	var _global = JSON.parse(document.getElementById("dataConfig").textContent);
+	var couchMode = _global.databaseConfig.dbMode === "couchDB";
+	var remote = _global.databaseConfig.mode === "remote";
+	
+	return {
+		restrict: "E",
+		template: 	"<div class='inline-block padding-left-25' ng-show='showSwitch'>" +
+						"<div class='small-letters white'>Sync Mode</div>" +
+						"<div>" +
+							"<label class='switch'>" +
+								"<input type='checkbox' ng-model='switchStatus' ng-click='switchChange()' >" +
+								"<div class='slider round'></div>" +
+							"</label>" +
+						"</div>" +
+					"</div>",
+		link: function(scope,elemt,attr) {
+			(couchMode === true) ? scope.showSwitch = true : "";
+			(remote === true) ? scope.switchStatus = true : scope.switchStatus = false;
+			scope.switchChange = function() {
+				
+			}
+		}
+	}
+});
+
+app.directive("toolTip",function() {
+	return {
+		restrict: "E",
+		scope: {},
+		replace: true,
+		template: "<div ng-show='tip'>{{tipText}}</div>",
+		link: function(scope,elemt,attr) {
+			elemt.on("focus",function() {
+				scope.tipText = attr.tip;
+				console.log(scope.tipText);
+				scope.tip = true;
+			});
+			elemt.on("blur",function() {
+				console.log("HUND");
 			});
 		}
 	}

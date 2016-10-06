@@ -103,6 +103,7 @@ app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBu
 	}
 	
 	$scope.showModal = function(data) {
+		(data === undefined) ? msgBusService.emit("modal:create") : "";
 		modalService.open({template:"create",barColor:"blue",data:data}).then(function(data) {
 			$scope.addItem(data);
 			console.log("resolved");
@@ -121,6 +122,11 @@ app.controller("cidCtrl",["$scope","$rootScope","docShareService","msgBusService
 	$scope.extCampaigns = [];
 	$scope.intCampaigns = [];
 	$scope.creativeChannel = [];
+	
+	msgBusService.get("modal:create",$scope,function(event,data) {
+		$scope.userForm.$setPristine();
+		$scope.userForm.$setUntouched();
+	});
 	
 	$scope.checkWID = function(value,intext) {
 		var campaign;
@@ -186,7 +192,7 @@ app.controller("cidCtrl",["$scope","$rootScope","docShareService","msgBusService
 		if(val) {
 			$scope.addToDB(data);
 		} else {
-			modalService.open({template:"invalid",barColor:"green"}).
+			modalService.open({template:"invalid",barColor:"red"}).
 			then(function() {
 				console.log("resolved");
 			},function() {
