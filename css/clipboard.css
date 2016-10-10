@@ -1,0 +1,96 @@
+@import 'https://fonts.googleapis.com/css?family=Abel';
+@keyframes fade-in {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes fade-out {
+	0% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+.clipboard-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+}
+
+.clipboard-clipboardinfo {
+	font-family: 'Abel', sans-serif;
+	font-size: 0.9em;
+	top: 0px;
+	right: 30px;
+	border: 1px solid rgba(0,0,0,.2);
+	background-color: #ffffff;
+	border-radius: 5px;
+	cursor: default !important;
+	-moz-user-select: text !important;
+	white-space: normal !important;
+}
+
+.clipboard-clipboardframe {
+	padding: 8px;
+}
+
+.clipboard-url-block {
+	display: block;
+	padding-bottom: 7px;
+}
+
+.clipboard-block-title {
+	font-weight: bold;
+	display: inline-block;
+	float: left;
+}
+
+.clipboard-block-url {
+	display: inline-block;
+	width: 100%;
+	text-align: left;
+	padding-left: 2%;
+	-moz-user-select: all !important;
+}
+
+.clipboard-specialInput {
+	border: 0px;
+	width: 100%;
+}
+
+.clipboard-full-width {
+	width: 100%
+}
+
+.clipboard-copied-info {
+	right: 15px;
+	top: 0px;
+	display: none;
+}
+
+.clipboard-copied-info-show {
+	animation: fade-in 0.5s linear;
+	display: block !important;
+}
+
+.clipboard-popup {
+	animation: fade-in 0.5s linear;
+}
+
+.clipboard-popout {
+	animation: fade-out 0.5s linear;
+}
+
+.clipboard-close {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+}

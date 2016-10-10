@@ -6,6 +6,23 @@
 			</button>
 		</div>
 		<div class="col-md-12 col-sm-12">
+			<div class="search col-md-12 col-sm-12">
+				<div class="col-md-10 col-sm-10 no-padding">
+					<input type="text" class="form-control" ng-model="searchKey" />
+					<div class="searchIcon height-100 absolute right-0 top-0">
+						<span class="glyphicon glyphicon-search padding-top-10 padding-right-10"></span>
+					</div>
+				</div>
+				<div class="col-md-2 col-sm-2">
+					<select ng-model="showRows" class="form-control inputField">
+						<option ng-selected="true">1</option>
+						<option>2</option>
+						<option>3</option>
+						<option>4</option>
+						<option>alle</option>
+					</select>
+				</div>
+			</div>
 			<table class="table table-responsive table-hover">
 				<th>Ziel-Url</th><th>Werbemittel</th><th>Typ</th><th>CID</th><th></th>
 				<tr ng-repeat="(key,value) in items track by $index">
@@ -13,7 +30,10 @@
 					<td>{{value.doc.ad}}</td>
 					<td>{{value.doc.intext}}</td>
 					<td>{{value.doc.cid}}</td>
-					<td align="center" style="width:90px">
+					<td align="center" style="width:150px">
+						<div class="btn btn-default relative" style="padding: 1px 1px;" clipboard cbvalue="{doc:value.doc,id:$index}">
+							<span class="glyphicon glyphicon-saved" aria-hidden="true"></span>
+						</div>
 						<button ng-click="showDetails(value.doc)" type="button" class="btn btn-default" style="padding: 1px 1px;">
 							<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
 						</button>

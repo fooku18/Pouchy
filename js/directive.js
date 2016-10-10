@@ -39,7 +39,7 @@ app.directive("sitetitle",function(routeNavi,$location) {
 	}
 });
 
-app.directive("modalOnDemand",["$rootScope","msgBusService","modalService",function($rootScope,msgBusService,modalService) {
+app.directive("modalOnDemand",["$rootScope","$window","msgBusService","modalService",function($rootScope,$window,msgBusService,modalService) {
 	return {
 		restrict: "E",
 		scope: {},
@@ -76,6 +76,11 @@ app.directive("modalOnDemand",["$rootScope","msgBusService","modalService",funct
 				if(options.data) scope.values = options.data;
 				if(options.template === scope.modalTemplateOld) {
 					scope.modalShow = true;
+					if(document.getElementById("btn-focus-on")) {
+						$window.setTimeout(function() {
+							document.getElementById("btn-focus-on").focus();
+						},0);
+					}
 				} else {
 					scope.modalTemplate = "templates/modal/" + options.template + ".html";
 				}
@@ -83,6 +88,11 @@ app.directive("modalOnDemand",["$rootScope","msgBusService","modalService",funct
 			});
 			scope.$on('$includeContentLoaded', function () {
 				scope.modalShow = true;
+				if(document.getElementById("btn-focus-on")) {
+					$window.setTimeout(function() {
+						document.getElementById("btn-focus-on").focus();
+					},0);
+				}
 			});
 		}
 	}
@@ -168,3 +178,83 @@ app.directive("toolTip",function() {
 		}
 	}
 });
+
+app.directive("clipboard",["$timeout",function($timeout) {
+	return {
+		restrict: "A",
+		scope: {
+			cbvalue: "="
+		},
+		transclude: true,
+		template: 	"<div ng-transclude=''></div>" +
+					"<div class='clipboard-overlay' ng-click='showme()'>" +
+						"<div class='absolute clipboard-clipboardinfo' ng-show='show'>" + 
+							"<span class='clipboard-close glyphicon glyphicon-remove' ng-click='close()'></span>" +
+							"<div class='clipboard-clipboardframe'>" + 
+								"<div class='clipboard-url-block' ng-repeat='i in cbvaluenew track by $index'>" +
+									"<div class='clipboard-block-title'>" + 
+										"{{i.key}}" +
+									"</div>" +
+									"<div class='clipboard-block-url'>" +
+										"<div class='clipboard-full-width relative'>" +
+											"<input class='clipboard-specialInput spid_{{cbvalue.id}}' ng-value='i.value' ng-click='copytoclipboard($index)'></span>" +
+											"<span class='absolute clipboard-copied-info ci_{{cbvalue.id}}_{{$index}}'>kopiert</span>" +
+										"</div>" +
+									"</div>" +
+							"</div>" +
+						"</div>" +
+					"</div>",
+		link: function(scope,elemt,attr) {
+			var urls = ["targeturl","campaignID","FQ","cid"];
+			var urlsTranslation = ["Ziel-URL","Kampagnen-Nummer","Vollqualifizierter Link","Kampagnen-ID (CID)"];
+			var clip = $(".specialInput")[scope.cbvalue.id];
+			
+			(function() {
+				scope.cbvaluenew = [];
+				for(var key in scope.cbvalue.doc) {
+					if(!scope.cbvalue.doc.hasOwnProperty(key)) continue;
+					for(var i=0;i<=urls.length-1;i++) {
+						if(urls[i] === key) scope.cbvaluenew.push({key:urlsTranslation[i],value:scope.cbvalue.doc[key]});
+					}
+				}
+			})();
+			
+			scope.show = false;
+			scope.showme = function() {
+				if(!scope.show) {
+					var el = document.getElementsByClassName("spid_" + scope.cbvalue.id);
+					for(var i=0;i<=el.length-1;i++) {
+						el[i].style.width = ((el[i].value.length + 1) * 7) + "px";
+					}
+					scope.show = true;
+					$(".clipboard-clipboardinfo")[scope.cbvalue.id].classList.add("clipboard-popup");
+				} 
+			};
+			
+			scope.close = function() {
+				$(".clipboard-clipboardinfo")[scope.cbvalue.id].classList.add("clipboard-popout");
+				$timeout(function() {
+					scope.show = false;
+					$(".clipboard-clipboardinfo")[scope.cbvalue.id].classList.remove("clipboard-popout");
+				},500);
+			}
+			
+			scope.copytoclipboard = function(val) {
+				var inp = document.getElementsByClassName("spid_" + scope.cbvalue.id)[val];
+				var info = document.getElementsByClassName("ci_" + scope.cbvalue.id + "_" + val)[0];
+				inp.select();
+				try {
+					document.execCommand("copy");
+				}catch(err) {
+					console.log("not supported");
+				}finally {
+					info.classList.add("clipboard-copied-info-show");
+					$timeout(function() {
+						scope.show = false;
+						info.classList.remove("clipboard-copied-info-show");
+					},1000);
+				}
+			}
+		}
+	}
+}]);
