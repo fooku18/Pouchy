@@ -21,7 +21,7 @@
 					<option>Conversion</option>
 					<option>Image</option>
 				</select>
-				<div class="absolute top-60 z-index-10" ng-show="userForm.cType.$invalid && !userForm.cType.pristine">
+				<div class="absolute top-60 z-index-10" ng-show="userForm.cType.$invalid && !userForm.cType.$pristine">
 					<div class="padding-left-5">
 						<div class="my-arrow-up"></div>
 					</div>
@@ -44,24 +44,24 @@
 				</div>
 			</div>
 			<div ng-model="c.date" validate-date>
-				<div class="col-md-2 col-sm-2 form-group" ng-class="{'has-error': userForm.cStart.$invalid && !$userForm.cStart.pristine}">
+				<div class="col-md-2 col-sm-2 form-group" ng-class="{'has-error': userForm.cStart.$invalid && !$userForm.cStart.$pristine}">
 					<div class="padding-bottom-5">
 						<label class="label label-default">Kampagnenstart</label>
 					</div>
 					<input name="cStart" class="inputField form-control" type="text" datepicker="" ng-model="c.date.Start" placeholder="Start..." ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" />
-					<div class="absolute top-60 z-index-10" ng-show="userForm.cStart.$invalid && !$userForm.cStart.pristine">
+					<div class="absolute top-60 z-index-10" ng-show="userForm.cStart.$invalid && !$userForm.cStart.$pristine">
 						<div class="padding-left-5">
 							<div class="my-arrow-up"></div>
 						</div>
 						<p class="help-block my-info-box">Falsches Datum</p>
 					</div>
 				</div>
-				<div class="col-md-2 col-sm-2 form-group" ng-class="{'has-error':userForm.cEnd.$invalid && !userForm.cEnd.pristine }">
+				<div class="col-md-2 col-sm-2 form-group" ng-class="{'has-error':userForm.cEnd.$invalid && !userForm.cEnd.$pristine }">
 					<div class="padding-bottom-5">
 						<span class="label label-default">Kampagnenende</span> 
 					</div>
 					<input name="cEnd" class="inputField form-control" type="text" datepicker="" ng-model="c.date.End" placeholder="Ende..." ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" />
-					<div class="absolute top-60 z-index-10" ng-show="userForm.cEnd.$invalid && !$userForm.cEnd.pristine">
+					<div class="absolute top-60 z-index-10" ng-show="userForm.cEnd.$invalid && !$userForm.cEnd.$pristine">
 						<div class="padding-left-5">
 							<div class="my-arrow-up"></div>
 						</div>

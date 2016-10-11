@@ -12,7 +12,7 @@ myServices.service("$pouchDB",["$rootScope","$q","msgBusService",function($rootS
 		database[databaseName] = new PouchDB(databaseName);
 	}
 	
-	this.addDefer = function(db,doc) {
+	this.addItem = function(db,doc) {
 		var defer = $q.defer();
 		database[db].put(doc).then(function() {
 			defer.resolve(doc);
@@ -42,7 +42,13 @@ myServices.service("$pouchDB",["$rootScope","$q","msgBusService",function($rootS
     }
 	
 	this.fetchAllDocs = function(db) {
-		return database[db].allDocs({include_docs: true, descending: true});
+		var defer = $q.defer();
+		database[db].allDocs({include_docs: true, descending: true}).then(function(docs) {
+			defer.resolve(docs);
+		},function() {
+			defer.reject();
+		});
+		return defer.promise;
 	}
 	
 	this.deleteDoc = function(db,id,rev) {
@@ -59,21 +65,6 @@ myServices.service("docShareService",function() {
 		return values;
 	}
 });
-
-myServices.factory("routeNavi",["$route","$location",function($route,$location) {
-	var routes = [];
-	angular.forEach($route.routes, function(val,key) {
-		if(val.name) {
-			routes.push({
-				path: key,
-				name: val.name
-			})
-		}
-	});
-	return {
-		routes: routes
-	}
-}]);
 
 myServices.service("modalService",["$rootScope","$q","msgBusService",function($rootScope,$q,msgBusService) {
 	var modal = {

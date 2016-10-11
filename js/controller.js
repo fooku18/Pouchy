@@ -1,25 +1,3 @@
-app.controller("naviCtrl",["$scope","$location","$rootScope",function($scope,$location,$rootScope) {
-	$scope.isActive = function(viewLocation) {
-		return viewLocation === $location.path();
-	}
-	$scope.setTitle = function(title) {
-		$rootScope.$broadcast("$location:change",title);
-	}
-}]);
-
-app.controller("modalDelegatorCtrl",["$scope","$rootScope","modalService",function($scope,$rootScope,modalService) {
-	//$scope.$on("modal:initService",function(event,data) {
-	//	modalService.open(data).then(function() {
-	//		console.log("resolved");
-	//	},function() {
-	//		console.log("rejected");
-	//	});
-	//});
-	//$scope.open = function() {
-		
-	//}
-}]);
-
 app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBusService","$attrs","docShareService","modalService",function($scope,$rootScope,$pouchDB,hashService,msgBusService,$attrs,docShareService,modalService) {
 	var db = $attrs.db;
 	$scope.items = [];
@@ -52,7 +30,7 @@ app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBu
 		if(db === "campaigns_db") {
 			data["campid"] = hashService.hash(data["_id"]).toString();
 		}
-		$pouchDB.addDefer(db,data).then(function(doc) {
+		$pouchDB.addItem(db,data).then(function(doc) {
 			if($scope.userForm) {
 				$scope.c = {};
 				$scope.userForm.$setPristine();
@@ -66,9 +44,7 @@ app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBu
 			$scope.items = [];
 			for(var i=0;i<=docs.rows.length-1;i++) {
 				($scope.items).push(docs.rows[i]);
-			};
-		}).then(function() {
-			$scope.$apply();
+			}
 		});
 	}
 	
@@ -137,7 +113,6 @@ app.controller("cidCtrl",["$scope","$rootScope","docShareService","msgBusService
 				var counterLength = counter.toString().length;
 				var wid = Array(6-counterLength).join("0") + counter.toString();
 				$scope.values.adid = wid;
-				$scope.$digest();
 			});
 	};
 	
@@ -167,7 +142,6 @@ app.controller("cidCtrl",["$scope","$rootScope","docShareService","msgBusService
 			for(var i=0;i<=data.rows.length-1;i++) {
 				($scope.creativeChannel).push(data.rows[i].doc);
 			}
-			$scope.$apply();
 		});
 	}())
 

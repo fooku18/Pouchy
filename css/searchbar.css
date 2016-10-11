@@ -1,4 +1,9 @@
-.search {
+.searchbar-search {
     position: relative;
     margin: 10px auto;
+}
+
+.searchbar-searchIcon {
+	top: 0;
+	right: 25px;
 }

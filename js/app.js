@@ -1,7 +1,7 @@
 //fetch databases from config
 var app = (function() {
 	var _global = JSON.parse(document.getElementById("dataConfig").textContent);
-	var app = angular.module("myApp",["myServices","ngRoute"]);
+	var app = angular.module("myApp",["myServices","ngRoute","pouchy.navigation","pouchy.clipboard","pouchy.modal","pouchy.pagination"])//;
 	app.run(["$pouchDB",function($pouchDB) {
 		for(var i=0;i<=_global.databaseConfig.databases.length-1;i++) {
 			$pouchDB.setDatabase(_global.databaseConfig.databases[i]);

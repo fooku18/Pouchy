@@ -1,0 +1,17 @@
+<ul class="pagination">
+	<li>
+		<a href="javascript:void(0)" ng-click="changePage('-1')" aria-label="Previous">
+			<span aria-hidden="true">&laquo;</span>
+		</a>
+	</li>
+	<li ng-repeat="l in paginationArray" ng-click="changePage(l)" ng-class="{active: currentPage === l}">
+		<a href="javascript:void(0)">
+			{{l}}
+		</a>
+	</li>
+	<li>
+		<a href="javascript:void(0)" ng-click="changePage('+1')" aria-label="Next">
+			<span aria-hidden="true">&raquo;</span>
+		</a>
+	</li>
+</ul>

@@ -1,51 +1,48 @@
 <div ng-controller="mainCtrl" db="cid_db">
-	<div class="row relative">
-		<div class="add-cid absolute">
-			<button type="button" class="btn btn-default btn-lg" ng-click="showModal()">
-				<span class='glyphicon glyphicon-plus'></span>
-			</button>
-		</div>
+	<div class="row">
 		<div class="col-md-12 col-sm-12">
-			<div class="search col-md-12 col-sm-12">
-				<div class="col-md-10 col-sm-10 no-padding">
+			<div class="searchbar-search col-md-12 col-sm-12">
+				<div class="col-md-10 col-sm-10 relative">
 					<input type="text" class="form-control" ng-model="searchKey" />
-					<div class="searchIcon height-100 absolute right-0 top-0">
+					<div class="searchbar-searchIcon absolute">
 						<span class="glyphicon glyphicon-search padding-top-10 padding-right-10"></span>
 					</div>
 				</div>
 				<div class="col-md-2 col-sm-2">
-					<select ng-model="showRows" class="form-control inputField">
-						<option ng-selected="true">1</option>
-						<option>2</option>
-						<option>3</option>
-						<option>4</option>
-						<option>alle</option>
+					<select ng-model="showRows" ng-init="showRows = 1" class="form-control inputField" ng-options="v for v in [1,2,3,4,5,'alle']">
 					</select>
 				</div>
 			</div>
+			{{currentPage}}
 			<table class="table table-responsive table-hover">
 				<th>Ziel-Url</th><th>Werbemittel</th><th>Typ</th><th>CID</th><th></th>
-				<tr ng-repeat="(key,value) in items track by $index">
-					<td>{{value.doc.targeturl}}</td>
-					<td>{{value.doc.ad}}</td>
-					<td>{{value.doc.intext}}</td>
-					<td>{{value.doc.cid}}</td>
+				<tr ng-repeat="item in items track by $index">
+					<td>{{item.doc.targeturl}}</td>
+					<td>{{item.doc.ad}}</td>
+					<td>{{item.doc.intext}}</td>
+					<td>{{item.doc.cid}}</td>
 					<td align="center" style="width:150px">
-						<div class="btn btn-default relative" style="padding: 1px 1px;" clipboard cbvalue="{doc:value.doc,id:$index}">
+						<div class="btn btn-default relative" style="padding: 1px 1px;" clipboard cbvalue="{doc:item.doc,id:$index}">
 							<span class="glyphicon glyphicon-saved" aria-hidden="true"></span>
 						</div>
-						<button ng-click="showDetails(value.doc)" type="button" class="btn btn-default" style="padding: 1px 1px;">
+						<button ng-click="showDetails(item.doc)" type="button" class="btn btn-default" style="padding: 1px 1px;">
 							<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
 						</button>
-						<button ng-click="showModal(value.doc)" type="button" class="btn btn-default" style="padding: 1px 1px;">
+						<button ng-click="showModal(item.doc)" type="button" class="btn btn-default" style="padding: 1px 1px;">
 							<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
 						</button>
-						<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'Datensatz: &quot;' + value.doc.cid + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
+						<button ng-click="deleteItem({id:item.doc._id,rev:item.doc._rev,info:'Datensatz: &quot;' + item.doc.cid + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
 							<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
 						</button>
 					</td>
 				</tr>
 			</table>
+			<div class="add-cid pull-right">
+				<button type="button" class="btn btn-default btn-lg" ng-click="showModal()">
+					<span class='glyphicon glyphicon-plus theme-color-blue'></span>
+				</button>
+			</div>
+			<pagination ng-model="currentPage" total-items="{{items.length}}" show-rows="showRows"></pagination>
 		</div>
 	</div>
 </div>
