@@ -1,7 +1,7 @@
 app.controller("mainCtrl",["$scope","$rootScope","$pouchDB","hashService","msgBusService","$attrs","docShareService","modalService",function($scope,$rootScope,$pouchDB,hashService,msgBusService,$attrs,docShareService,modalService) {
 	var db = $attrs.db;
 	$scope.items = [];
-	
+	$scope.test = "HUND";
 	$scope.startListening = function(val) {
 		$pouchDB.startListening(val);
 	}

@@ -238,13 +238,19 @@ angular.module("pouchy.clipboard",[])
 //###Pagination Module###START
 //
 angular.module("pouchy.pagination",[])
-.controller("paginationController",["$scope","paginationConfig",function($scope,paginationConfig) {
+.controller("paginationDelegate",["$scope",function($scope) {
+	$scope.currentPage = 1;
+	this.setCurrentPage = function(val) {
+		$scope.currentPage = val;
+	}
+}])
+.controller("paginationController",["$scope","$filter","paginationConfig",function($scope,$filter,paginationConfig) {
 	function calculate() {
-		var base = $scope.totalItems / $scope.showRows;
+		var base = $filter("included")($scope.items,$scope.searchKey) / $scope.showRows;
 		if(base <= 1) {
 			$scope.paginationSpan = 1;
 		} else {
-			var mod = ($scope.totalItems % $scope.showRows > 0) ? 1 : 0;
+			var mod = (($filter("included")($scope.items,$scope.searchKey)) % $scope.showRows > 0) ? 1 : 0;
 			$scope.paginationSpan = base + mod;
 		}
 		$scope.paginationSpan = ($scope.paginationSpan > paginationConfig.maxSpan) ? 5 : $scope.paginationSpan;
@@ -252,20 +258,23 @@ angular.module("pouchy.pagination",[])
 		for(var i=1;i<=$scope.paginationSpan;i++) {
 			$scope.paginationArray.push(i);
 		}
+		console.log($filter("included")($scope.items,$scope.searchKey));
 	}
-	$scope.$watch("totalItems",function() {
+	$scope.$watch("items",function() {
 		calculate();
 	});
 	$scope.$watch("showRows",function() {
 		calculate();
 	});
-	$scope.changePage = function(val) {
+	$scope.$watch("searchKey",function() {
+		calculate();
+	});
+	$scope.changePageFn = function(val) {
 		if(typeof(val) === "string") {
 			($scope.currentPage + parseInt(val,10)) === 0 ? $scope.currentPage = 1 : ($scope.currentPage + parseInt(val,10)) < $scope.paginationSpan ? $scope.currentPage += parseInt(val,10) : $scope.currentPage = $scope.paginationSpan;			
 		} else {
 			$scope.currentPage = val
 		}
-		console.log($scope.currentPage);
 		if($scope.currentPage > $scope.paginationArray[$scope.paginationArray.length-1]) {
 			$scope.paginationArray = $scope.paginationArray.slice(1);
 			$scope.paginationArray.push($scope.currentPage);
@@ -275,36 +284,68 @@ angular.module("pouchy.pagination",[])
 			$scope.paginationArray.unshift($scope.currentPage);
 		}
 		console.log($scope.paginationArray);
+		return $scope.currentPage;
 	}
 	$scope.currentPage = 1;
-	$scope.list = [1,2,3,4,5,6,7,8,9,10];
 }])
 .constant("paginationConfig", 
 	{
 		maxSpan: 5
 	}
 )
-.directive("pagination",["$parse",function($parse) {
+.directive("paginationParent",function() {
 	return {
 		restrict: "E",
-		scope: {
-			totalItems: "@",
-			showRows: "="
-		},
-		templateUrl: "templates/pagination/pagination.html",
-		require: ["pagination","?ngModel"],
-		controller: "paginationController",
-		link: function($scope,elemt,attr,ctrl) {
-			var paginationCtrl = ctrl[0];
-			var ngModelCtrl = ctrl[1];
-			var modelGetter = $parse(attr['ngModel']);
-            console.log(modelGetter($scope));
-			var modelSetter = modelGetter.assign;
-			modelSetter($scope, 'bar');
-			console.log(modelGetter($scope));
+		transclude: true,
+		scope: true,
+		controller: "paginationDelegate",
+		link: function(scope,element,attr,ctrl,transclude) {
+			transclude(scope,function(clone) {
+				element.append(clone);
+			});
 		}
 	}
-}]);
+})
+.directive("pagination",function() {
+	return {
+		restrict: "E",
+		require: "^paginationParent",
+		scope: {
+			items: "@",
+			showRows: "@",
+			searchKey: "@"
+		},
+		controller: "paginationController",
+		templateUrl: "templates/pagination/pagination.html",
+		link: function(scope,elemt,attr,ctrl,transcludeFn) {
+			scope.changePage = function(val) {
+				var current = scope.changePageFn(val);
+				ctrl.setCurrentPage(current);
+			}
+		}
+	}
+})
+.filter("pages",function() {
+	return function(input,currentPage,showRows) {
+		if(angular.isArray(input)) {
+			var start = (currentPage-1)*showRows;
+			var end = currentPage*showRows;
+			return input.slice(start,end);
+		}
+	}
+}).
+filter("included",function() {
+	return function(input,searchKey) {
+		console.log(input);
+		console.log(searchKey);
+		if(searchKey === "") return input.length;
+		var counter = 0;
+		for(var i=0;i<=input.length-1;i++) {
+			(input[i].indexOf(searchKey) > -1) ? counter += counter : counter = counter;
+		}
+		return counter;
+	}
+});
 //
 //###Pagination Module###END
 //
