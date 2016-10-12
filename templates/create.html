@@ -2,15 +2,17 @@
 	<div class="row">
 		<div class="col-md-12 col-sm-12">
 			<div class="searchbar-search col-md-12 col-sm-12">
-				<div class="col-md-10 col-sm-10 relative">
+				<div class="col-md-8 col-sm-8 relative">
 					<input type="text" class="form-control" ng-model="searchKey" />
 					<div class="searchbar-searchIcon absolute">
 						<span class="glyphicon glyphicon-search padding-top-10 padding-right-10"></span>
 					</div>
 				</div>
 				<div class="col-md-2 col-sm-2">
-					<select ng-model="showRows" ng-init="showRows = 2" class="form-control inputField" ng-options="v for v in [1,2,3,4,5]">
-					</select>
+					<pagination-show-filter></pagination-show-filter>
+				</div>
+				<div class="col-md-2 col-sm-2">
+					<pagination-show-rows></pagination-show-rows>
 				</div>
 			</div>
 			<pagination-parent>
@@ -19,7 +21,7 @@
 					<tr>
 						<th>Ziel-Url</th><th>Werbemittel</th><th>Typ</th><th>CID</th><th></th>
 					</tr>
-					<tr ng-repeat="item in searchitems = (items | filter:searchKey | pages:currentPage:showRows) track by $index">
+					<tr ng-repeat="item in searchitems = (items | pages:searchKey:currentPage:showRows:showFilter.id) track by $index">
 						<td>{{item.doc.targeturl}}</td>
 						<td>{{item.doc.ad}}</td>
 						<td>{{item.doc.intext}}</td>
@@ -40,7 +42,7 @@
 						</td>
 					</tr>
 				</table>
-				<pagination items="{{items}}" show-rows="{{showRows}}" search-key="{{searchKey}}">
+				<pagination items="items" show-rows="{{showRows}}" search-key="{{searchKey}} show-filter={{showFilter.id}}">
 			</pagination-parent>
 			<div class="add-cid pull-right">
 				<button type="button" class="btn btn-default btn-lg" ng-click="showModal()">

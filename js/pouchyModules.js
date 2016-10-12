@@ -258,12 +258,8 @@ angular.module("pouchy.pagination",[])
 		for(var i=1;i<=$scope.paginationSpan;i++) {
 			$scope.paginationArray.push(i);
 		}
-		console.log($filter("included")($scope.items,$scope.searchKey));
 	}
-	$scope.$watch("items",function() {
-		calculate();
-	});
-	$scope.$watch("showRows",function() {
+	$scope.$watch("items + showRows",function() {
 		calculate();
 	});
 	$scope.$watch("searchKey",function() {
@@ -283,7 +279,6 @@ angular.module("pouchy.pagination",[])
 			$scope.paginationArray.pop(1);
 			$scope.paginationArray.unshift($scope.currentPage);
 		}
-		console.log($scope.paginationArray);
 		return $scope.currentPage;
 	}
 	$scope.currentPage = 1;
@@ -293,11 +288,35 @@ angular.module("pouchy.pagination",[])
 		maxSpan: 5
 	}
 )
+.directive("paginationShowFilter",function() {
+	var tmp = "<select ng-model='showFilter' class='form-control inputField' ng-options='i.name for i in filterItems'></select>";
+	return {
+		restrict: "E",
+		scope: false,
+		template: tmp,
+		controller: function($scope) {
+			$scope.filterItems = [{id:'targeturl',name:'Ziel-URL'},{id:'ad',name:'Werbemittel'},{id:'intext',name:'Typ'},{id:'cid',name:'CID'}];
+			$scope.showFilter = $scope.filterItems[0];
+		}
+	}
+})
+.directive("paginationShowRows",function() {
+	var tmp = "<select ng-model='showRows' class='form-control inputField' ng-options='i for i in filterRows'></select>";
+	return {
+		restrict: "E",
+		scope: false,
+		template: tmp,
+		controller: function($scope) {
+			$scope.filterRows = [10,20,30,40,50];
+			$scope.showRows = 10;
+		}
+	}
+})
 .directive("paginationParent",function() {
 	return {
 		restrict: "E",
 		transclude: true,
-		scope: true,
+		scope: false,
 		controller: "paginationDelegate",
 		link: function(scope,element,attr,ctrl,transclude) {
 			transclude(scope,function(clone) {
@@ -311,9 +330,10 @@ angular.module("pouchy.pagination",[])
 		restrict: "E",
 		require: "^paginationParent",
 		scope: {
-			items: "@",
+			items: "=",
 			showRows: "@",
-			searchKey: "@"
+			searchKey: "@",
+			searchFilter: "@"
 		},
 		controller: "paginationController",
 		templateUrl: "templates/pagination/pagination.html",
@@ -326,24 +346,35 @@ angular.module("pouchy.pagination",[])
 	}
 })
 .filter("pages",function() {
-	return function(input,currentPage,showRows) {
+	return function(input,searchKey,currentPage,showRows,showFilter) {
+		var regex = new RegExp(searchKey,"i");
 		if(angular.isArray(input)) {
+			var fitArray = [];
+			for(var i=0;i<=input.length-1;i++) {
+				if(regex.test(input[i].doc[showFilter])) {
+					fitArray.push(input[i]);
+				}
+			}
 			var start = (currentPage-1)*showRows;
 			var end = currentPage*showRows;
-			return input.slice(start,end);
+			return fitArray.slice(start,end);
 		}
 	}
 }).
 filter("included",function() {
-	return function(input,searchKey) {
-		console.log(input);
-		console.log(searchKey);
-		if(searchKey === "") return input.length;
-		var counter = 0;
-		for(var i=0;i<=input.length-1;i++) {
-			(input[i].indexOf(searchKey) > -1) ? counter += counter : counter = counter;
+	return function(input,searchKey,showFilter) {
+		var regex = new RegExp(searchKey,"i");
+		if(angular.isArray(input)) {
+			var fitArray = [];
+			for(var i=0;i<=input.length-1;i++) {
+				if(regex.test(input[i].doc[showFilter])) {
+					fitArray.push(input[i]);
+				}
+			}
+			return fitArray.length;
+		} else {
+			return input.length;
 		}
-		return counter;
 	}
 });
 //
