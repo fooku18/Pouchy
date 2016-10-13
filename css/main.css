@@ -1,3 +1,23 @@
+@import 'https://fonts.googleapis.com/css?family=Abel';
+
+@keyframes fade-in {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes fade-out {
+	0% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
 select {
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -15,7 +35,7 @@ select {
 	left:0;
 	top:0;
 	background-color: #000000;
-	opacity: .5;
+	opacity: .7;
 	z-index: 1;
 }
 
@@ -76,6 +96,18 @@ select {
 
 .padding-left-25 {
 	padding-left: 25px;
+}
+
+.padding-left-relative-80 {
+	padding-left: 80%;
+}
+
+.padding-right-5 {
+	padding-right: 5px;
+}
+
+.padding-right-25 {
+	padding-right: 25px;
 }
 
 .left-0 {
@@ -209,4 +241,21 @@ select {
 
 .theme-color-blue {
 	color: #337AB7
+}
+
+.glyphicon-20 {
+	font-size: 20px;
+}
+
+.glyphicon-30 {
+	font-size: 30px;
+}
+
+.glyphicon-a:hover {
+	cursor: pointer;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.cursor-pointer:hover {
+	cursor: pointer;
 }

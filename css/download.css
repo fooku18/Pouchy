@@ -1,0 +1,40 @@
+.border-wrapper {
+	top: 35px;
+	right: 50px;
+	width: 150px;
+	background-color: transparent;
+}
+
+.download-container {
+	font-family: 'Abel', sans-serif;
+	border: 1px solid black;
+	border-radius: 5px;
+	background-color: #ffffff !important;
+}
+
+.download-frame {
+	padding: 5px;
+}
+
+.download-content {
+	font-size: 15px;
+}
+
+.download-top {
+	border-bottom: 1px solid black;
+}
+
+.download-arrow {
+	width: 0px;
+	height: 0px;
+	border-width: 10px;
+	border-style: solid;
+	border-color: transparent transparent #000000 transparent;
+}
+
+.download-headline {
+	margin: 0 !important;
+	background-color: #000000;
+	color: #ffffff;
+	padding-left: 10%;
+}

@@ -1,8 +1,23 @@
 //
+//###Datalayer Module###START
+//
+angular.module("pouchy.datalayer",[])
+.factory("$datalayer",function datalayerFactory() {
+	var dataLayer = (function() {
+		return JSON.parse(document.getElementById("dataConfig").textContent);
+	}())
+	
+	return dataLayer;
+});
+//
+//###Datalayer Module###END
+//
+
+//
 //###Navigation Module###START
 //
 angular.module("pouchy.navigation",[])
-.factory("routeNavi",["$route","$location",function($route,$location) {
+.factory("routeNavi",["$route","$location",function routeNaviFactory($route,$location) {
 	var routes = [];
 	angular.forEach($route.routes, function(val,key) {
 		if(val.name) {
@@ -16,7 +31,7 @@ angular.module("pouchy.navigation",[])
 		routes: routes
 	}
 }])
-.controller("naviCtrl",["$scope","$location","$rootScope",function($scope,$location,$rootScope) {
+.controller("naviCtrl",["$scope","$location","$rootScope",function naviController($scope,$location,$rootScope) {
 	$scope.isActive = function(viewLocation) {
 		return viewLocation === $location.path();
 	}
@@ -24,7 +39,7 @@ angular.module("pouchy.navigation",[])
 		$rootScope.$broadcast("$location:change",title);
 	}
 }])
-.directive("navi",["routeNavi",function(routeNavi) {
+.directive("navi",["routeNavi",function naviDirective(routeNavi) {
 	return {
 		restrict: "E",
 		replace: true,
@@ -34,7 +49,7 @@ angular.module("pouchy.navigation",[])
 		}
 	}
 }])
-.directive("sitetitle",function(routeNavi,$location) {
+.directive("sitetitle",function sitetitleDirective(routeNavi,$location) {
 	return {
 		restrict: "E",
 		template: "<div class='title'><h1>{{title}}</div></h1></div>",
@@ -57,7 +72,7 @@ angular.module("pouchy.navigation",[])
 //###Modal Module###START
 //
 angular.module("pouchy.modal",[])
-.service("modalService",["$rootScope","$q","msgBusService",function($rootScope,$q,msgBusService) {
+.service("modalService",["$rootScope","$q","msgBusService",function modalService($rootScope,$q,msgBusService) {
 	var modal = {
 		defer: null
 	}
@@ -84,7 +99,7 @@ angular.module("pouchy.modal",[])
 		reject: reject
 	}
 }])
-.directive("modalOnDemand",["$rootScope","$window","msgBusService","modalService",function($rootScope,$window,msgBusService,modalService) {
+.directive("modalOnDemand",["$rootScope","$window","msgBusService","modalService",function modalOnDemandDirective($rootScope,$window,msgBusService,modalService) {
 	return {
 		restrict: "E",
 		scope: {},
@@ -150,7 +165,7 @@ angular.module("pouchy.modal",[])
 //###Clipboard Module###START
 //
 angular.module("pouchy.clipboard",[])
-.controller("clipboardController",["$scope","$timeout",function($scope,$timeout) {
+.controller("clipboardController",["$scope","$timeout",function clipboardController($scope,$timeout) {
 	var urls = ["targeturl","campaignID","FQ","cid"];
 	var urlsTranslation = ["Ziel-URL","Kampagnen-Nummer","Vollqualifizierter Link","Kampagnen-ID (CID)"];
 	var clip = $(".specialInput")[$scope.cbvalue.id];
@@ -202,7 +217,7 @@ angular.module("pouchy.clipboard",[])
 		}
 	}
 }])
-.directive("clipboard",function() {
+.directive("clipboard",function clipboardDirective() {
 	return {
 		restrict: "A",
 		scope: {
@@ -238,13 +253,13 @@ angular.module("pouchy.clipboard",[])
 //###Pagination Module###START
 //
 angular.module("pouchy.pagination",[])
-.controller("paginationDelegate",["$scope",function($scope) {
+.controller("paginationDelegate",["$scope",function paginationDelegateController($scope) {
 	$scope.currentPage = 1;
 	this.setCurrentPage = function(val) {
 		$scope.currentPage = val;
 	}
 }])
-.controller("paginationController",["$scope","$filter","paginationConfig",function($scope,$filter,paginationConfig) {
+.controller("paginationController",["$scope","$filter","paginationConfig",function paginationController($scope,$filter,paginationConfig) {
 	function calculate() {
 		var base = $filter("included")($scope.items,$scope.searchKey) / $scope.showRows;
 		if(base <= 1) {
@@ -288,7 +303,7 @@ angular.module("pouchy.pagination",[])
 		maxSpan: 5
 	}
 )
-.directive("paginationShowFilter",function() {
+.directive("paginationShowFilter",function paginationShowFilterDirective() {
 	var tmp = "<select ng-model='showFilter' class='form-control inputField' ng-options='i.name for i in filterItems'></select>";
 	return {
 		restrict: "E",
@@ -300,7 +315,7 @@ angular.module("pouchy.pagination",[])
 		}
 	}
 })
-.directive("paginationShowRows",function() {
+.directive("paginationShowRows",function paginationShowRowsDirective() {
 	var tmp = "<select ng-model='showRows' class='form-control inputField' ng-options='i for i in filterRows'></select>";
 	return {
 		restrict: "E",
@@ -312,7 +327,7 @@ angular.module("pouchy.pagination",[])
 		}
 	}
 })
-.directive("paginationParent",function() {
+.directive("paginationParent",function paginationParentDirective() {
 	return {
 		restrict: "E",
 		transclude: true,
@@ -325,7 +340,7 @@ angular.module("pouchy.pagination",[])
 		}
 	}
 })
-.directive("pagination",function() {
+.directive("pagination",function paginationDirective() {
 	return {
 		restrict: "E",
 		require: "^paginationParent",
@@ -345,7 +360,7 @@ angular.module("pouchy.pagination",[])
 		}
 	}
 })
-.filter("pages",function() {
+.filter("pages",function pagesFilter() {
 	return function(input,searchKey,currentPage,showRows,showFilter) {
 		var regex = new RegExp(searchKey,"i");
 		if(angular.isArray(input)) {
@@ -361,7 +376,7 @@ angular.module("pouchy.pagination",[])
 		}
 	}
 }).
-filter("included",function() {
+filter("included",function includedFilter() {
 	return function(input,searchKey,showFilter) {
 		var regex = new RegExp(searchKey,"i");
 		if(angular.isArray(input)) {
@@ -379,5 +394,118 @@ filter("included",function() {
 });
 //
 //###Pagination Module###END
+//
+
+//
+//###Import/Export Module###START
+//
+angular.module("pouchy.import_export",["pouchy.datalayer"])
+.factory("exportFactory",function exportFactory() {
+	var saveData = (function () {
+		var a = document.createElement("a");
+		document.body.appendChild(a);
+		a.style = "display: none";
+		return function (data, fileName) {
+			var json = JSON.stringify(data),
+			//	blob = new Blob([json], {type: "octet/stream"}),
+			//	url = window.URL.createObjectURL(blob);
+			url = "data:application/json,";
+			a.href = url + json;
+			a.download = fileName;
+			a.click();
+			window.URL.revokeObjectURL(url);
+		};
+	}());
+	
+	function exportFile(data,fileName) {
+		saveData(data, fileName);
+	}
+	
+	return {
+		exportFile: exportFile
+	}
+})
+.controller("downloadCtrl",["$scope","exportFactory","$pouchDB","$datalayer","$q",function downloadCtrl($scope,exportFactory,$pouchDB,$datalayer,$q) {
+	$scope.downloadBoxActive = false;
+	$scope.export = false;
+	$scope.import = false;
+	this.toggleWindow = function() {
+		$scope.downloadBoxActive = !$scope.downloadBoxActive;
+	};
+	this.toggleText = function(val) {
+		$scope.export = false;
+		$scope.import = false;
+		$scope[val] = !$scope[val];
+	};
+	$scope.exportFile = function(val) {
+		var chain = [];
+		//for(var i=0;i<=$datalayer.databaseConfig.databases.length-1;i++) {
+		//	chain.push($datalayer.databaseConfig.databases[i]);
+		//}
+		//$pouchDB.fetchAllDocs("cid_db");
+	}
+}])
+.directive("downloadPop",function downloadPopDirective() {
+	var tmp = 	"<div class='border-wrapper absolute' ng-show='downloadBoxActive'>" +
+					"<div class='padding-left-relative-80'>" +
+						"<div class='download-arrow'></div>" +
+					"</div>" +
+					"<div class='download-container'>" +
+						"<div ng-show='export'>" +
+							"<h4 class='download-headline'>Import</h4>" +
+							"<div class='download-frame'>" +
+								"<div class='download-content'>" +
+								"</div>" +
+							"</div>" +
+						"</div>" +
+						"<div ng-show='import'>" +
+							"<h4 class='download-headline'>Export</h4>" +
+							"<div class='download-frame'>" +
+								"<div class='download-content'>" +
+									"<div class='padding-10 cursor-pointer download-top' ng-click='exportFile(\"json\")'>" +
+										"<b>.JSON</b> &nbsp; <span class='glyphicon glyphicon-floppy-save glyphicon-20 pull-right'></span>" +
+									"</div>" +
+									"<div class='padding-10 cursor-pointer' ng-click='exportFile(\"csv\")'>" +
+										"<b>.CSV</b> &nbsp; <span class='glyphicon glyphicon-floppy-save glyphicon-20 pull-right'></span>" +
+									"</div>" +
+								"</div>" +
+							"</div>" +
+						"</div>" +
+					"</div>" +
+				"</div>";
+	return {
+		restrict: "A",
+		scope: {},
+		controller: "downloadCtrl",
+		template: tmp,
+		transclude: true,
+		link: function(scope,element,attr,ctrl,transcludeFn) {
+			transcludeFn(scope,function(clone) {
+				element.append(clone);
+			});
+		}
+	}
+})
+.directive("importExport",function importExportDirective() {
+	return {
+		restrict: "A",
+		require: "^downloadPop",
+		scope: true,
+		link: function(scope,element,attr,ctrl) {
+			element.on("click",function() {
+				scope.$apply(function() {
+					ctrl.toggleWindow();
+					if(attr["importExport"] === "export") {
+						ctrl.toggleText("export");
+					} else {
+						ctrl.toggleText("import");
+					}
+				})
+			});
+		}
+	}
+});
+//
+//###Import/Export Module###END
 //
 
