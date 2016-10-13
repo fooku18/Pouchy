@@ -39,6 +39,10 @@ select {
 	z-index: 1;
 }
 
+.display-none {
+	display: none !important;
+}
+
 .banner {
 	height: 300px;
 	width: 100%;
@@ -63,6 +67,10 @@ select {
 .full {
 	width: 100%;
 	height: 100%;
+}
+
+.width-relative-100 {
+	width: 100%;
 }
 
 .block {

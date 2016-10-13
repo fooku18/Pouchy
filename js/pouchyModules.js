@@ -399,7 +399,7 @@ filter("included",function includedFilter() {
 //
 //###Import/Export Module###START
 //
-angular.module("pouchy.import_export",["pouchy.datalayer"])
+angular.module("pouchy.import_export",["pouchy.datalayer","pouchy.FileReader"])
 .factory("exportFactory",function exportFactory() {
 	var saveData = (function () {
 		var a = document.createElement("a");
@@ -455,6 +455,8 @@ angular.module("pouchy.import_export",["pouchy.datalayer"])
 							"<h4 class='download-headline'>Import</h4>" +
 							"<div class='download-frame'>" +
 								"<div class='download-content'>" +
+									"<button class='btn btn-default width-relative-100'><label for='upload-input' class='full'>Upload</label></button>" +
+									"<input type='file' name='upload-input' id='upload-input' class='display-none' file-reader />" +
 								"</div>" +
 							"</div>" +
 						"</div>" +
@@ -509,3 +511,35 @@ angular.module("pouchy.import_export",["pouchy.datalayer"])
 //###Import/Export Module###END
 //
 
+//
+//###FileReader Module###START
+//
+angular.module("pouchy.FileReader",[])
+.directive("fileReader",function() {
+	return {
+		restrict: "A",
+		scope: {},
+		link: function(scope,element,attr) {
+			element.on("change",function(changeEvent) {
+				var reader = new FileReader();
+				reader.onload = function (loadEvent) {
+					console.log(loadEvent);
+					scope.$apply(function () {
+						scope.ngFileModel = {
+							lastModified: changeEvent.target.files[0].lastModified,
+							lastModifiedDate: changeEvent.target.files[0].lastModifiedDate,
+							name: changeEvent.target.files[0].name,
+							size: changeEvent.target.files[0].size,
+							type: changeEvent.target.files[0].type,
+							data: loadEvent.target.result
+						};
+					});
+				}
+				reader.readAsText(changeEvent.target.files[0]);
+			});
+		}
+	}
+});
+//
+//###FileReader Module###START
+//
