@@ -1,16 +1,43 @@
 //
-//###Datalayer Module###START
+//###MultiPurpose Module###START
 //
-angular.module("pouchy.datalayer",[])
-.factory("$datalayer",function datalayerFactory() {
-	var dataLayer = (function() {
-		return JSON.parse(document.getElementById("dataConfig").textContent);
-	}())
+angular.module("pouchy.multiPurpose",[])
+.constant("DATALAYER",(function() {
+	return JSON.parse(document.getElementById("dataConfig").textContent);
+})())
+.factory("$msgBusService",["$rootScope",function($rootScope) {
+	var msgBus = {};
+	msgBus.emit = function(msg,data) {
+		$rootScope.$emit(msg,data);
+	};
+	msgBus.get = function(msg,scope,func) {
+		var unbind = $rootScope.$on(msg,func);
+		scope.$on("$destroy",unbind);
+	};
+	return msgBus;
+}])
+.factory("$hashService",function() {
+	var hash = function(str, asString, seed) {
+		var i, l,
+			hval = (seed === undefined) ? 0x811c9dc5 : seed;
+
+		for (i = 0, l = str.length; i < l; i++) {
+			hval ^= str.charCodeAt(i);
+			hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+		}
+		if( asString ){
+			// Convert to 8 digit hex string
+			return ("0000000" + (hval >>> 0).toString(16)).substr(-8);
+		}
+		return hval >>> 0;
+	};
 	
-	return dataLayer;
+	return {
+		hash: hash
+	};
 });
 //
-//###Datalayer Module###END
+//###MultiPurpose Module###END
 //
 
 //
@@ -49,7 +76,7 @@ angular.module("pouchy.navigation",[])
 		}
 	}
 }])
-.directive("sitetitle",function sitetitleDirective(routeNavi,$location) {
+.directive("sitetitle",["routeNavi","$location","$pouchDB",function sitetitleDirective(routeNavi,$location,$pouchDB) {
 	return {
 		restrict: "E",
 		template: "<div class='title'><h1>{{title}}</div></h1></div>",
@@ -59,11 +86,12 @@ angular.module("pouchy.navigation",[])
 				if(routeNavi.routes[i].path === $location.path()) $scope.title = routeNavi.routes[i].name;
 			}
 			$rootScope.$on("$location:change", function(event,data) {
+				$pouchDB.stopSyncing();
 				$scope.title = data;
 			});
 		}
 	}
-});
+}]);
 //
 //###Navigation Module###END
 //
@@ -72,14 +100,14 @@ angular.module("pouchy.navigation",[])
 //###Modal Module###START
 //
 angular.module("pouchy.modal",[])
-.service("modalService",["$rootScope","$q","msgBusService",function modalService($rootScope,$q,msgBusService) {
+.service("$modalService",["$rootScope","$q","$msgBusService",function modalService($rootScope,$q,$msgBusService) {
 	var modal = {
 		defer: null
 	}
 	
 	function open(options) {
 		modal.defer = $q.defer();
-		msgBusService.emit("modal:init",options);
+		$msgBusService.emit("modal:init",options);
 		return modal.defer.promise;
 	}
 	
@@ -99,7 +127,7 @@ angular.module("pouchy.modal",[])
 		reject: reject
 	}
 }])
-.directive("modalOnDemand",["$rootScope","$window","msgBusService","modalService",function modalOnDemandDirective($rootScope,$window,msgBusService,modalService) {
+.directive("modalOnDemand",["$rootScope","$window","$msgBusService","$modalService",function modalOnDemandDirective($rootScope,$window,$msgBusService,$modalService) {
 	return {
 		restrict: "E",
 		scope: {},
@@ -122,15 +150,15 @@ angular.module("pouchy.modal",[])
 			scope.barColor = "custom-modal-bar-green";
 			scope.modalShow = null;
 			scope.modalHide = function() {
-				modalService.reject();
+				$modalService.reject();
 				scope.modalShow = null;
 			};
 			scope.confirm = function() {
-				modalService.resolve();
+				$modalService.resolve();
 				scope.modalShow = null;
 			};
 			scope.modalTemplate = "";
-			msgBusService.get("modal:init",scope,function(event,options) {
+			$msgBusService.get("modal:init",scope,function(event,options) {
 				scope.values = {};
 				scope.barColor = "custom-modal-bar-" + options.barColor;
 				if(options.data) scope.values = options.data;
@@ -399,7 +427,7 @@ filter("included",function includedFilter() {
 //
 //###Import/Export Module###START
 //
-angular.module("pouchy.import_export",["pouchy.datalayer","pouchy.FileReader"])
+angular.module("pouchy.import_export",["pouchy.multiPurpose","pouchy.FileReader"])
 .factory("exportFactory",function exportFactory() {
 	var saveData = (function () {
 		var a = document.createElement("a");
@@ -425,7 +453,7 @@ angular.module("pouchy.import_export",["pouchy.datalayer","pouchy.FileReader"])
 		exportFile: exportFile
 	}
 })
-.controller("downloadCtrl",["$scope","exportFactory","$pouchDB","$datalayer","$q",function downloadCtrl($scope,exportFactory,$pouchDB,$datalayer,$q) {
+.controller("downloadCtrl",["$scope","exportFactory","$pouchDB","DATALAYER","$q",function downloadCtrl($scope,exportFactory,$pouchDB,DATALAYER,$q) {
 	$scope.downloadBoxActive = false;
 	$scope.export = false;
 	$scope.import = false;
@@ -437,10 +465,18 @@ angular.module("pouchy.import_export",["pouchy.datalayer","pouchy.FileReader"])
 		$scope.import = false;
 		$scope[val] = !$scope[val];
 	};
+	$scope.progressBarStatus = 0;
+	this.updateProgressBar = function(val) {
+		if(val < 100) {
+			$scope.progressBarStatus = val;
+		} else {
+			$scope.progressBarStatus = 0;
+		}
+	}
 	$scope.exportFile = function(val) {
 		var chain = [];
-		//for(var i=0;i<=$datalayer.databaseConfig.databases.length-1;i++) {
-		//	chain.push($datalayer.databaseConfig.databases[i]);
+		//for(var i=0;i<=DATALAYER.databaseConfig.databases.length-1;i++) {
+		//	chain.push(DATALAYER.databaseConfig.databases[i]);
 		//}
 		//$pouchDB.fetchAllDocs("cid_db");
 	}
@@ -455,7 +491,13 @@ angular.module("pouchy.import_export",["pouchy.datalayer","pouchy.FileReader"])
 							"<h4 class='download-headline'>Import</h4>" +
 							"<div class='download-frame'>" +
 								"<div class='download-content'>" +
-									"<button class='btn btn-default width-relative-100'><label for='upload-input' class='full'>Upload</label></button>" +
+									"<label for='upload-input' class='full btn btn-default'>Upload</label>" +
+									"<div class='download-loading-wrapper'>" +
+										"<div class='download-loading-bar'>" + 
+											"<div class='download-loading-process' ng-style='{width: progressBarStatus + \"px\"}'>" +
+											"</div>" +
+										"</div>" +
+									"</div>" +
 									"<input type='file' name='upload-input' id='upload-input' class='display-none' file-reader />" +
 								"</div>" +
 							"</div>" +
@@ -514,32 +556,494 @@ angular.module("pouchy.import_export",["pouchy.datalayer","pouchy.FileReader"])
 //
 //###FileReader Module###START
 //
-angular.module("pouchy.FileReader",[])
-.directive("fileReader",function() {
+angular.module("pouchy.FileReader",["pouchy.import_export"])
+.directive("fileReader",["$modalService",function($modalService) {
 	return {
 		restrict: "A",
 		scope: {},
-		link: function(scope,element,attr) {
+		require: "^downloadPop",
+		link: function(scope,element,attr,ctrl) {
 			element.on("change",function(changeEvent) {
-				var reader = new FileReader();
-				reader.onload = function (loadEvent) {
-					console.log(loadEvent);
-					scope.$apply(function () {
-						scope.ngFileModel = {
-							lastModified: changeEvent.target.files[0].lastModified,
-							lastModifiedDate: changeEvent.target.files[0].lastModifiedDate,
-							name: changeEvent.target.files[0].name,
-							size: changeEvent.target.files[0].size,
-							type: changeEvent.target.files[0].type,
-							data: loadEvent.target.result
-						};
+				var file = changeEvent.target.files[0];
+				var fileType = /^application\/json$/;
+				if(file.type.match(fileType)) {
+					var reader = new FileReader();
+					reader.onload = function (loadEvent) {
+						scope.$apply(function () {
+							scope.ngFileModel = {
+								lastModified: changeEvent.target.files[0].lastModified,
+								lastModifiedDate: changeEvent.target.files[0].lastModifiedDate,
+								name: changeEvent.target.files[0].name,
+								size: changeEvent.target.files[0].size,
+								type: changeEvent.target.files[0].type,
+								data: loadEvent.target.result
+							};
+							ctrl.updateProgressBar(100);
+						});
+					}
+					reader.onprogress = function(event) {
+						if(event.lengthComputable) {
+							ctrl.updateProgressBar(100 * (event.loaded / event.total));
+						}
+					}
+					reader.readAsText(changeEvent.target.files[0]);
+				} else {
+					console.log("File Extension Error");
+					$modalService.open({template:"fileExtensionError",barColor:"red"}).
+					then(function() {
+						console.log("resolved");
+					},function() {
+						console.log("rejected");
 					});
 				}
-				reader.readAsText(changeEvent.target.files[0]);
+			});
+		}
+	}
+}]);
+//
+//###FileReader Module###END
+//
+
+//
+//###PouchDB Module###START
+//
+angular.module("pouchy.pouchDB",[])
+.service("$pouchDB",["$rootScope","$q","$msgBusService","DATALAYER",function($rootScope,$q,$msgBusService,DATALAYER) {
+	var database = {};
+	var changeListenerClosure;
+	var syncClosure;
+	var remote = DATALAYER.databaseConfig.remoteUrl || "";
+	
+	this.getDatabases = function(dbName) {
+		return database[dbName];
+	}
+	
+	this.setDatabase = function(databaseName) {
+		database[databaseName] = new PouchDB(databaseName);
+	}
+	
+	this.addItem = function(db,doc) {
+		var defer = $q.defer();
+		database[db].put(doc).then(function() {
+			defer.resolve(doc);
+		},function() {
+			defer.reject(doc);
+		});
+		return defer.promise;
+	}
+	
+	this.startListening = function(val) {
+		if(changeListenerClosure) changeListenerClosure.cancel();
+		changeListenerClosure = database[val].changes(
+		{
+			since: "now",
+			live: true
+		}
+		).on("change", function(change) {
+			console.log(change);
+			if(!change.deleted) {
+				$msgBusService.emit(val + ":change",change);
+			} else {
+				$msgBusService.emit(val + ":delete",change);
+			}
+		}).on("error", function(err) {
+			console.log("Listener failure: " + err);
+		});
+		(DATALAYER.databaseConfig.autoSync) ? this.startSyncing(val,remote) : "";
+	}
+	
+	this.startSyncing = function(db,remoteDatabase) {
+        syncClosure = database[db].sync(remoteDatabase + db,
+			{
+				live: true,
+				retry: true
+			}
+		).on("change",function(change) {
+			console.log(change);
+		}).on('active', function () {
+			console.log("active");
+		}).on('denied', function (err) {
+			console.log(err);
+		}).on('complete', function (info) {
+			console.log(info);
+		}).on('error', function (err) {
+			console.log(err);
+		});
+    }
+	
+	this.stopSyncing = function() {
+		if(syncClosure) syncClosure.cancel();
+	}
+	
+	this.fetchAllDocs = function(db) {
+		var defer = $q.defer();
+		database[db].allDocs({include_docs: true, descending: true}).then(function(docs) {
+			defer.resolve(docs);
+		},function() {
+			defer.reject();
+		});
+		return defer.promise;
+	}
+	
+	this.deleteDoc = function(db,id,rev) {
+		return database[db].remove(id,rev);
+	}
+}])
+.controller("switchCtrl",["$scope","$pouchDB","$currentDB","DATALAYER", function switchController($scope,$pouchDB,$currentDB,DATALAYER) {
+	$scope.switchChange = function() {
+		if($scope.switchStatus === true) {
+			$pouchDB.startSyncing($currentDB.getDB(),DATALAYER.databaseConfig.remoteUrl);
+		} else {
+			$pouchDB.stopSyncing();
+		}
+	}
+}])
+.directive("switch",["DATALAYER",function switchDirective(DATALAYER) {
+	var _global = DATALAYER;
+	var couchMode = _global.databaseConfig.dbMode === "couchDB";
+	var remote = _global.databaseConfig.autoSync === true;
+	
+	return {
+		restrict: "E",
+		scope: {},
+		controller: "switchCtrl",
+		template: 	"<div class='inline-block padding-left-25' ng-show='showSwitch'>" +
+						"<div class='small-letters white'>Sync Mode</div>" +
+						"<div>" +
+							"<label class='switch'>" +
+								"<input type='checkbox' ng-model='switchStatus' ng-click='switchChange()' >" +
+								"<div class='slider round'></div>" +
+							"</label>" +
+						"</div>" +
+					"</div>",
+		link: function(scope,elemt,attr) {
+			(couchMode === true) ? scope.showSwitch = true : "";
+			(remote === true) ? scope.switchStatus = true : scope.switchStatus = false;
+		}
+	}
+}]);
+//
+//###PouchDB Module###END
+//
+
+
+//
+//###AppLogic Module###START
+//
+angular.module("pouchy.pageLogic",[])
+.service("$currentDB",function currentDBService() {
+	var currentDB;
+	this.dbChanger = function(val) {
+		currentDB = val;
+	}
+	this.getDB = function() {
+		return currentDB;
+	}
+})
+.controller("mainCtrl",["$scope","$rootScope","$pouchDB","$hashService","$msgBusService","$attrs","$modalService","$currentDB",function mainController($scope,$rootScope,$pouchDB,$hashService,$msgBusService,$attrs,$modalService,$currentDB) {
+	var db = $attrs.db;
+	$scope.items = [];
+	
+	$scope.startListening = function(val) {
+		$currentDB.dbChanger(db);
+		$pouchDB.startListening(val);
+	}
+	
+	$scope.validation = function(val,data) {
+		if(val) {
+			$scope.addItem(data);
+			$modalService.open({template:"success",barColor:"green"}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
+			});
+		} else {
+			$modalService.open({template:"invalid",barColor:"red"}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
+			});
+		}
+	}
+	
+	$scope.addItem = function(data) {
+		if(!data["_id"] || data["_id"] === "") data["_id"] = new Date().toISOString();
+		if(db === "campaigns_db") {
+			data["campid"] = $hashService.hash(data["_id"]).toString();
+		}
+		$pouchDB.addItem(db,data).then(function(doc) {
+			if($scope.userForm) {
+				$scope.c = {};
+				$scope.userForm.$setPristine();
+			}
+			console.log(doc._id + " created!");
+		});
+	};
+	
+	$scope.fetchAll = function(val) {
+		$pouchDB.fetchAllDocs(val).then(function(docs) {
+			$scope.items = [];
+			for(var i=0;i<=docs.rows.length-1;i++) {
+				($scope.items).push(docs.rows[i]);
+			}
+		});
+	}
+	
+	$scope.fetchInitial = function() {
+		$scope.fetchAll(db);
+		$msgBusService.get(db + ":change",$scope,
+			function(event,data) {
+				$scope.fetchAll(db);
+			}
+		);
+		$msgBusService.get(db + ":delete",$scope,
+			function(event,data) {
+				$scope.$apply(function() {
+					for(var i=0;i<=$scope.items.length-1;i++) {
+						if($scope.items[i].id === data.id) {
+							$scope.items.splice(i,1);
+							break;
+						}
+					}
+				});
+			}
+		);
+	}
+	
+	$scope.deleteItem = function(doc) {
+		$modalService.open({template:"delete",barColor:"red",data:doc.info}).then(function() {
+			$pouchDB.deleteDoc(db,doc.id,doc.rev);
+			console.log(doc.id + " deleted");
+		},function() {
+			console.log("Aborted");
+		});
+	}
+	
+	$scope.showModal = function(data) {
+		$modalService.open({template:"create",barColor:"blue",data:data}).then(function(data) {
+			$scope.addItem(data);
+			console.log("resolved");
+		}, function() {
+			console.log("rejected");
+		});
+	}
+	
+	//initialize
+	$scope.startListening(db);
+	$scope.fetchInitial();
+}])
+.controller("cidCtrl",["$scope","$rootScope","$msgBusService","$pouchDB","$modalService",function cidController($scope,$rootScope,$msgBusService,$pouchDB,$modalService) {
+	$scope.intelliAdCampaigns = [];
+	$scope.extCampaigns = [];
+	$scope.intCampaigns = [];
+	$scope.creativeChannel = [];
+	
+	$scope.checkWID = function(value,intext) {
+		var campaign;
+		(intext === "extern") ? campaign = "extcampaign" : campaign = "intcampaign";
+		$pouchDB.fetchAllDocs("cid_db")
+			.then(function(data) {
+				var counter = 0;
+				for(var i = 0; i<=data.rows.length-1;i++) {
+					if(data.rows[i].doc[campaign] === value) {
+						counter++;
+					}
+				}
+				counter++;
+				var counterLength = counter.toString().length;
+				var wid = Array(6-counterLength).join("0") + counter.toString();
+				$scope.values.adid = wid;
+			});
+	};
+	
+	//fetch other db information
+	(function() {$pouchDB.fetchAllDocs("intelliad_db").
+		then(function(data) {
+			for(var i=0;i<=data.rows.length-1;i++) {
+				($scope.intelliAdCampaigns).push({
+					'name':data.rows[i].doc.name,
+					'root':data.rows[i].doc.root,
+					'ext':data.rows[i].doc.ext
+				});
+			};
+		}).then(function() {
+			return $pouchDB.fetchAllDocs("campaigns_db");
+		}).then(function(data) {
+			for(var i=0;i<=data.rows.length-1;i++) {
+				if(data.rows[i].doc.intext === "Extern") {
+					($scope.extCampaigns).push(data.rows[i].doc);
+				} else {
+					($scope.intCampaigns).push(data.rows[i].doc);
+				}
+			}
+		}).then(function() {
+			return $pouchDB.fetchAllDocs("channelid_db");
+		}).then(function(data) {
+			for(var i=0;i<=data.rows.length-1;i++) {
+				($scope.creativeChannel).push(data.rows[i].doc);
+			}
+		});
+	}())
+
+	$scope.isActive = function(val) {
+		if(val === "Extern") {
+			$scope.values.intcampaign = "";
+			return true;
+		} else {
+			$scope.values.extcampaign = "";
+			$scope.values.extintellicampaign = "";
+			return false;
+		}
+	}
+	
+	$scope.validation = function(val,data) {
+		if(val) {
+			$scope.addToDB(data);
+		} else {
+			$modalService.open({template:"invalid",barColor:"green"}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
+			});
+		}
+	}
+	
+	$scope.addToDB = function(data) {
+		addedData = $scope.doCIDLogic(data);
+		$modalService.resolve(data);
+		$scope.modalHide();
+	}
+	
+	//CID generating logic
+	$scope.doCIDLogic = function(data) {
+		if(typeof(data.extcampaign) !== "undefined" && data.extcampaign !== "") {
+			//add intelliadCamp to new Dataset
+			for(var i=0;i<=$scope.intelliAdCampaigns.length-1;i++) {
+				if($scope.intelliAdCampaigns[i].name === data.extintellicampaign) {
+					data.root = $scope.intelliAdCampaigns[i].root;
+					data.ext = $scope.intelliAdCampaigns[i].ext;
+					break;
+				}
+			}
+			//add EXTcampaignID to new Dataset
+			for(var i=0;i<=$scope.extCampaigns.length-1;i++) {
+				if($scope.extCampaigns[i].name === data.extcampaign) {
+					data.campaignID = $scope.extCampaigns[i].campid;
+					data.campaignType = $scope.extCampaigns[i].type.charAt(0).toLowerCase();
+					data.campaignStart = $scope.extCampaigns[i].start;
+					data.campaignEnd = $scope.extCampaigns[i].end;
+					data.campaignIntExtSuffix = "e";
+					break;
+				}
+			}
+		} else {
+			//add INTcampaignID to new Dataset
+			for(var i=0;i<=$scope.intCampaigns.length-1;i++) {
+				if($scope.intCampaigns[i].name === data.intcampaign) {
+					data.campaignID = $scope.intCampaigns[i].campid;
+					data.campaignType = $scope.intCampaigns[i].type.charAt(0).toLowerCase();
+					data.campaignStart = $scope.intCampaigns[i].start;
+					data.campaignEnd = $scope.intCampaigns[i].end;
+					data.campaignIntExtSuffix = "i";
+					break;
+				}
+			}
+		}
+		//add ChannelID to new Dataset
+		for(var i=0;i<=$scope.creativeChannel.length-1;i++) {
+			if($scope.creativeChannel[i].channel === data.creativechannel) {
+				data.channelID = $scope.creativeChannel[i].channelID;
+				data.channel = $scope.creativeChannel[i].channel;
+			}
+		}
+		
+		//generate CID 
+		//get globals
+		var globals = JSON.parse(document.getElementById("dataConfig").textContent);
+		var domainToken = globals.cidConfig.domainToken;
+		var organizationToken = globals.cidConfig.organizationToken;
+		//if question mark exists then add ampersand and concatenate
+		var cid = data.campaignType + "_" + domainToken + "_" + data.channelID + data.campaignIntExtSuffix + "_" + organizationToken + "_" + data.campaignID + "_" + data.adid + "_" + data.randomid;
+		if(data.targeturl.indexOf("?") > -1) {
+			var FQ = data.targeturl + "&" + cid;
+		} else {
+		//if no question mark in string then add ampersand + cid
+			var FQ = data.targeturl + "?" + cid;
+		}
+		data.FQ = FQ;
+		data.cid = cid;
+		
+		return data;
+	}
+}])
+.directive("datepicker",function() {
+	return {
+		restrict: "A",
+		link: function(scope,elem,attr) {
+			$(elem).datepicker({
+				dateFormat: "dd.mm.yy",
+				dayNamesMin: ["So","Mo","Di","Mi","Do","Fr","Sa"],
+				monthNames: [ "Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember" ],
+				autoSize: true
+			});
+		}
+	}
+})
+.directive("validateDate", function validateDateDirective() {
+	return {
+	   restrict: 'A',
+	   require: 'ngModel',
+	   link: function(scope, ele, attrs, ctrl){
+			scope.$watch(attrs.ngModel,function(datesObj) {
+				if(datesObj !== undefined) {
+					if(datesObj["Start"] && datesObj["End"]) {
+						var dayEnd = datesObj.End.substring(0,2);
+						var monthEnd = datesObj.End.substring(3,5);
+						var yearEnd = datesObj.End.substring(6,10);
+						var dayStart = datesObj.Start.substring(0,2);
+						var monthStart = datesObj.Start.substring(3,5);
+						var yearStart = datesObj.Start.substring(6,10);
+						if(new Date(monthStart + "/" + dayStart + "/" + yearStart) <= new Date(monthEnd + "/" + dayEnd + "/" + yearEnd)) {
+							ctrl.$setValidity("wrongDatePeriod",true);
+						} else {
+							ctrl.$setValidity("wrongDatePeriod",false);
+						}
+					}
+				}
+			},true);
+	   }
+	}
+})
+.directive("widCheck",function widCheckDirective() {
+	return {
+		link: function(scope,elemt,attr) {
+			elemt.bind("change",function() {
+				scope.checkWID(elemt[0].value,attr.widCheck);
+			});
+		}
+	}
+})
+.directive("toolTip",function toolTipDirective() {
+	return {
+		restrict: "E",
+		scope: {},
+		replace: true,
+		template: "<div ng-show='tip'>{{tipText}}</div>",
+		link: function(scope,elemt,attr) {
+			elemt.on("focus",function() {
+				scope.tipText = attr.tip;
+				console.log(scope.tipText);
+				scope.tip = true;
+			});
+			elemt.on("blur",function() {
+				console.log("HUND");
 			});
 		}
 	}
 });
 //
-//###FileReader Module###START
+//###AppLogic Module###START
 //

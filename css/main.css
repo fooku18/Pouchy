@@ -54,6 +54,7 @@ select {
 }
 
 .title {
+	font-family: 'Abel', sans-serif;
 	position: absolute;
 	bottom: 0px;
 	left: 10px;

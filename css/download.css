@@ -38,3 +38,19 @@
 	color: #ffffff;
 	padding-left: 10%;
 }
+
+.download-loading-wrapper {
+	width: 100%;
+}
+
+.download-loading-bar {
+	height: 1px;
+	width: 90%;
+	margin: 0 auto;
+}
+
+.download-loading-process {
+	width: 0;
+	background-color: rgba(8, 194, 255, 0.63);
+	height: 100%;
+}

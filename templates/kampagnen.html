@@ -17,9 +17,7 @@
 				<div class="padding-bottom-5">
 					<label class="label label-default">Kampagnen-Typ</label>
 				</div>
-				<select name="cType" ng-model="c.Type" class="form-control inputField" ng-minlength="1">
-					<option>Conversion</option>
-					<option>Image</option>
+				<select name="cType" ng-model="c.Type" class="form-control inputField" ng-minlength="1" ng-init="c.Type = 'Conversion'" ng-options="v for v in ['Conversion','Image']">
 				</select>
 				<div class="absolute top-60 z-index-10" ng-show="userForm.cType.$invalid && !userForm.cType.$pristine">
 					<div class="padding-left-5">
@@ -32,9 +30,7 @@
 				<div class="padding-bottom-5">
 					<span class="label label-default">Interne/Externe Kampagne</span>
 				</div>
-				<select name="cIntExt" ng-model="c.IntExt" class="form-control inputField" ng-minlength="1">
-					<option>Intern</option>
-					<option>Extern</option>
+				<select name="cIntExt" ng-model="c.IntExt" class="form-control inputField" ng-minlength="1" ng-init="c.IntExt = 'Intern'" ng-options="v for v in ['Intern','Extern']">
 				</select>
 				<div class="absolute top-60 z-index-10" ng-show="userForm.cIntExt.$invalid && !userForm.cIntExt.$pristine">
 					<div class="padding-left-5">
