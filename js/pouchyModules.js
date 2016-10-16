@@ -86,7 +86,6 @@ angular.module("pouchy.navigation",[])
 				if(routeNavi.routes[i].path === $location.path()) $scope.title = routeNavi.routes[i].name;
 			}
 			$rootScope.$on("$location:change", function(event,data) {
-				$pouchDB.stopSyncing();
 				$scope.title = data;
 			});
 		}
@@ -100,6 +99,14 @@ angular.module("pouchy.navigation",[])
 //###Modal Module###START
 //
 angular.module("pouchy.modal",[])
+.run(["$templateRequest",function($templateRequest) {
+	$templateRequest("templates/modal/create.html");
+	$templateRequest("templates/modal/delete.html");
+	$templateRequest("templates/modal/fileExtensionError.html");
+	$templateRequest("templates/modal/invalid.html");
+	$templateRequest("templates/modal/success.html");
+	$templateRequest("templates/modal/connectionError.html");
+}])
 .service("$modalService",["$rootScope","$q","$msgBusService",function modalService($rootScope,$q,$msgBusService) {
 	var modal = {
 		defer: null
@@ -147,7 +154,7 @@ angular.module("pouchy.modal",[])
 						"</div>" +
 					"</div>",
 		link: function(scope,elem,attr) {
-			scope.barColor = "custom-modal-bar-green";
+			//scope.barColor = "custom-modal-bar-green";
 			scope.modalShow = null;
 			scope.modalHide = function() {
 				$modalService.reject();
@@ -161,20 +168,9 @@ angular.module("pouchy.modal",[])
 			$msgBusService.get("modal:init",scope,function(event,options) {
 				scope.values = {};
 				scope.barColor = "custom-modal-bar-" + options.barColor;
+				scope.modalTemplate = "templates/modal/" + options.template + ".html";
+				scope.remote = options.remote;
 				if(options.data) scope.values = options.data;
-				if(options.template === scope.modalTemplateOld) {
-					scope.modalShow = true;
-					if(document.getElementById("btn-focus-on")) {
-						$window.setTimeout(function() {
-							document.getElementById("btn-focus-on").focus();
-						},0);
-					}
-				} else {
-					scope.modalTemplate = "templates/modal/" + options.template + ".html";
-				}
-				scope.modalTemplateOld = options.template;
-			});
-			scope.$on('$includeContentLoaded', function () {
 				scope.modalShow = true;
 				if(document.getElementById("btn-focus-on")) {
 					$window.setTimeout(function() {
@@ -182,6 +178,14 @@ angular.module("pouchy.modal",[])
 					},0);
 				}
 			});
+			/*scope.$on('$includeContentLoaded', function () {
+				scope.modalShow = true;
+				if(document.getElementById("btn-focus-on")) {
+					$window.setTimeout(function() {
+						document.getElementById("btn-focus-on").focus();
+					},0);
+				}
+			});*/
 		}
 	}
 }]);
@@ -610,9 +614,10 @@ angular.module("pouchy.FileReader",["pouchy.import_export"])
 angular.module("pouchy.pouchDB",[])
 .service("$pouchDB",["$rootScope","$q","$msgBusService","DATALAYER",function($rootScope,$q,$msgBusService,DATALAYER) {
 	var database = {};
-	var changeListenerClosure;
+	var changeHandler;
 	var syncClosure;
 	var remote = DATALAYER.databaseConfig.remoteUrl || "";
+	var remoteOff;
 	
 	this.getDatabases = function(dbName) {
 		return database[dbName];
@@ -633,14 +638,13 @@ angular.module("pouchy.pouchDB",[])
 	}
 	
 	this.startListening = function(val) {
-		if(changeListenerClosure) changeListenerClosure.cancel();
-		changeListenerClosure = database[val].changes(
+		if(changeHandler) changeHandler.cancel();
+		changeHandler = database[val].changes(
 		{
 			since: "now",
 			live: true
 		}
 		).on("change", function(change) {
-			console.log(change);
 			if(!change.deleted) {
 				$msgBusService.emit(val + ":change",change);
 			} else {
@@ -649,14 +653,21 @@ angular.module("pouchy.pouchDB",[])
 		}).on("error", function(err) {
 			console.log("Listener failure: " + err);
 		});
-		(DATALAYER.databaseConfig.autoSync) ? this.startSyncing(val,remote) : "";
+		if(DATALAYER.databaseConfig.autoSync && !remoteOff) {
+			this.startSyncing(val,remote)
+		}
 	}
 	
 	this.startSyncing = function(db,remoteDatabase) {
+		if(database[db]._events.destroyed.length > 4) {
+			database[db]._events.destroyed = database[db]._events.destroyed.slice(0,4);
+		}
+		remoteOff = false;
+		if(syncClosure) syncClosure.cancel();
         syncClosure = database[db].sync(remoteDatabase + db,
 			{
 				live: true,
-				retry: true
+				retry: false
 			}
 		).on("change",function(change) {
 			console.log(change);
@@ -667,12 +678,20 @@ angular.module("pouchy.pouchDB",[])
 		}).on('complete', function (info) {
 			console.log(info);
 		}).on('error', function (err) {
-			console.log(err);
+			console.log("connection error");
+			remoteOff = true;
+			$msgBusService.emit("remoteconnection:lost");
 		});
     }
 	
 	this.stopSyncing = function() {
-		if(syncClosure) syncClosure.cancel();
+		var defer = $q.defer();
+		if(syncClosure) {
+			syncClosure.cancel();
+		}
+		remoteOff = true;
+		defer.resolve();
+		return defer.promise;
 	}
 	
 	this.fetchAllDocs = function(db) {
@@ -689,14 +708,27 @@ angular.module("pouchy.pouchDB",[])
 		return database[db].remove(id,rev);
 	}
 }])
-.controller("switchCtrl",["$scope","$pouchDB","$currentDB","DATALAYER", function switchController($scope,$pouchDB,$currentDB,DATALAYER) {
+.controller("switchCtrl",["$scope","$pouchDB","$currentDB","DATALAYER","$msgBusService","$modalService", function switchController($scope,$pouchDB,$currentDB,DATALAYER,$msgBusService,$modalService) {
 	$scope.switchChange = function() {
-		if($scope.switchStatus === true) {
+		if($scope.switchStatus) {
 			$pouchDB.startSyncing($currentDB.getDB(),DATALAYER.databaseConfig.remoteUrl);
 		} else {
-			$pouchDB.stopSyncing();
+			$pouchDB.stopSyncing().then(function() {
+				$modalService.open({template:"connectionError",barColor:"red",remote:DATALAYER.databaseConfig.remoteUrl}).
+				then(function() {
+					console.log("resolved");
+				},function() {
+					console.log("rejected");
+				});
+			});
 		}
 	}
+	$msgBusService.get("remoteconnection:lost",$scope,function() {
+		$scope.$apply(function() {
+			$scope.switchStatus = false;
+			//switch message lamp ########################### to add
+		})
+	});
 }])
 .directive("switch",["DATALAYER",function switchDirective(DATALAYER) {
 	var _global = DATALAYER;
@@ -706,15 +738,24 @@ angular.module("pouchy.pouchDB",[])
 	return {
 		restrict: "E",
 		scope: {},
+		replace: true,
 		controller: "switchCtrl",
-		template: 	"<div class='inline-block padding-left-25' ng-show='showSwitch'>" +
-						"<div class='small-letters white'>Sync Mode</div>" +
-						"<div>" +
-							"<label class='switch'>" +
-								"<input type='checkbox' ng-model='switchStatus' ng-click='switchChange()' >" +
-								"<div class='slider round'></div>" +
-							"</label>" +
-						"</div>" +
+		template: 	"<div class='inline-block'>" +
+						"<div class='inline-block padding-left-25' ng-show='showSwitch'>" +
+							"<div class='small-letters white'>Sync Mode</div>" +
+							"<div>" +
+								"<label class='switch'>" +
+									"<input id='switcher' type='checkbox' ng-model='switchStatus' ng-click='switchChange()' >" +
+									"<div class='slider round'></div>" +
+								"</label>" +
+							"</div>" +
+						"</div>" + 
+						//"<div class='inline-block switch-remote-message'>" +
+						//	"<div class='small-letters white'></div>" +
+						//	"<div class='switch-remote-message-content'>" +
+						//		"CONTENT" +
+						//	"</div>" + 
+						//"</div>" +
 					"</div>",
 		link: function(scope,elemt,attr) {
 			(couchMode === true) ? scope.showSwitch = true : "";
@@ -777,6 +818,7 @@ angular.module("pouchy.pageLogic",[])
 			if($scope.userForm) {
 				$scope.c = {};
 				$scope.userForm.$setPristine();
+				$scope.userForm.$setUntouched();
 			}
 			console.log(doc._id + " created!");
 		});
@@ -822,6 +864,7 @@ angular.module("pouchy.pageLogic",[])
 	}
 	
 	$scope.showModal = function(data) {
+		$msgBusService.emit("cid_create:modal");
 		$modalService.open({template:"create",barColor:"blue",data:data}).then(function(data) {
 			$scope.addItem(data);
 			console.log("resolved");
@@ -839,6 +882,10 @@ angular.module("pouchy.pageLogic",[])
 	$scope.extCampaigns = [];
 	$scope.intCampaigns = [];
 	$scope.creativeChannel = [];
+	
+	$msgBusService.get("cid_create:modal",$scope,function() {
+		$scope.userForm.$setUntouched();
+	});
 	
 	$scope.checkWID = function(value,intext) {
 		var campaign;
@@ -901,8 +948,14 @@ angular.module("pouchy.pageLogic",[])
 	$scope.validation = function(val,data) {
 		if(val) {
 			$scope.addToDB(data);
+			$modalService.open({template:"success",barColor:"green"}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
+			});
 		} else {
-			$modalService.open({template:"invalid",barColor:"green"}).
+			$modalService.open({template:"invalid",barColor:"red"}).
 			then(function() {
 				console.log("resolved");
 			},function() {
@@ -914,7 +967,6 @@ angular.module("pouchy.pageLogic",[])
 	$scope.addToDB = function(data) {
 		addedData = $scope.doCIDLogic(data);
 		$modalService.resolve(data);
-		$scope.modalHide();
 	}
 	
 	//CID generating logic

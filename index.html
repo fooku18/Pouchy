@@ -13,10 +13,11 @@
 	<link rel="stylesheet" href="css/clipboard.css" />
 	<link rel="stylesheet" href="css/searchbar.css" />
 	<link rel="stylesheet" href="css/download.css" />
+	<link rel="stylesheet" href="css/context.css" />
 	<script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
 	<script type="text/javascript" src="js/jquery-ui.js"></script>
 	<script type="text/javascript" src="js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="js/pouchdb-6.0.4.js"></script>
+	<script type="text/javascript" src="js/pouchdb-6.0.6.js"></script>
 	<script type="text/javascript" src="js/angular.min.js"></script>
 	<script type="text/javascript" src="js/angular-route.js"></script>
 	<script id="dataConfig" type="application/json"></script>
@@ -42,7 +43,16 @@
 			</div>
 		</div>
 	</div>
-	<div class="banner">
+	<div class="banner relative">
+		<div class="context-info absolute">
+			<div class="context-expander">
+				<div class="context-expander-arrow">
+					<span class="glyphicon glyphicon-chevron-left glyphicon-20"></span>
+				</div>
+			</div>
+			<div class="context-content">
+			</div>
+		</div>
 		<sitetitle></sitetitle>
 	</div>
 	<div class="frame">

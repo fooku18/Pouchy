@@ -1,0 +1,21 @@
+.context-info {
+	top:50px;
+	right: 0;
+	height: 250px;
+}
+
+.context-expander {
+	display: table-cell;
+	vertical-align: middle;
+	text-align: center;
+	height: 250px;
+	width: 20px;
+	background-color: rgba(209,207,224,.88);
+	border-radius: 10px 0 0 10px;
+}
+
+.context-expander-arrow {
+	display: inline-block;
+	height: 20px;
+	width: 100%;
+}
