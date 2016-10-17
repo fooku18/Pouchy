@@ -34,8 +34,7 @@ select {
 	height: 50px;
 	left:0;
 	top:0;
-	background-color: #000000;
-	opacity: .7;
+	background-color: rgba(0,0,0,.5);
 	z-index: 1;
 }
 
@@ -117,6 +116,10 @@ select {
 
 .padding-right-25 {
 	padding-right: 25px;
+}
+
+.margin-bottom-15 {
+	margin-bottom: 15px;
 }
 
 .left-0 {
@@ -260,9 +263,13 @@ select {
 	font-size: 30px;
 }
 
+.glyphicon-a {
+	color: rgba(255,255,255,.7);
+}
+
 .glyphicon-a:hover {
 	cursor: pointer;
-	color: rgba(255, 255, 255, 0.7);
+	color: rgba(255, 209, 11, 0.74);
 }
 
 .cursor-pointer:hover {

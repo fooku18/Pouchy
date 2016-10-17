@@ -1,21 +1,50 @@
-.context-info {
+.banner > .context-info {
 	top:50px;
 	right: 0;
 	height: 250px;
 }
 
-.context-expander {
-	display: table-cell;
-	vertical-align: middle;
-	text-align: center;
+.banner > .context-info > .context-wrapper {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+.banner > .context-info > .context-wrapper > .context-expander {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 	height: 250px;
 	width: 20px;
-	background-color: rgba(209,207,224,.88);
+	background-color: rgba(255,255,255,.88);
 	border-radius: 10px 0 0 10px;
 }
 
-.context-expander-arrow {
+.banner > .context-info > .context-wrapper > .context-expander:hover {
+	cursor: pointer;
+}
+
+.banner > .context-info > .context-wrapper > .context-expander > .context-expander-arrow {
 	display: inline-block;
 	height: 20px;
 	width: 100%;
+}
+
+.banner > .context-info > .context-wrapper > .context-content-wrapper {
+	background-color: #ffffff;
+	width: 0;
+}
+
+/*.banner > .context-info > .context-wrapper.expand > .context-content-wrapper {
+	background-color: #ffffff;
+	width: 500px;
+}*/
+
+.banner > .context-info > .context-wrapper.expand > .context-content-wrapper > .context-content-frame {
+	padding: 10px;
+}
+
+.banner > .context-info > .context-wrapper > .context-content-wrapper > .context-content-frame > .context-content-content {
+	height: 230px;
+	overflow-y: auto; 
 }

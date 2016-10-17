@@ -96,7 +96,61 @@ angular.module("pouchy.navigation",[])
 //
 
 //
-//###Modal Module###START
+//###News Module###START
+//
+angular.module("pouchy.news",[])
+.controller("newsCtrl",["$scope",function newsController($scope) {
+	$scope.status = false;
+	$scope.statusChange = function() {
+		$scope.status = !$scope.status
+		if($scope.status) {
+			$(".context-content-wrapper").width(window.innerWidth/2);
+		} else {
+			$(".context-content-wrapper").width(0);
+		}
+	}
+}])
+.directive("news",function newsDirective() {
+var tmp = 	"<div class='context-info absolute'>" +
+				"<div class='context-wrapper' ng-class={'expand':status}>" +
+					"<div class='context-expander' ng-click='statusChange()'>" +
+						"<div class='context-expander-arrow'>" + 
+							"<span class='glyphicon glyphicon-chevron-left glyphicon-20' ng-if='!status'></span>" +
+							"<span class='glyphicon glyphicon-chevron-right glyphicon-20' ng-if='status'></span>" +
+						"</div>" + 
+					"</div>" + 
+					"<div class='context-content-wrapper'>" + 
+						"<div class='context-content-frame'>" +
+							"<div class='context-content-content'>" +
+								"<h1>HUND</h1>" +
+								"<h1>HUND</h1>" +
+								"<h1>HUND</h1>" +
+								"<h1>HUND</h1>" +
+								"<h1>HUND</h1>" +
+								"<h1>HUND</h1>" +
+							"</div>" +
+						"</div>" + 
+					"</div>" +
+				"</div>" +
+			"</div>";
+	return {
+		restrict: "E",
+		scope: {},
+		template: tmp,
+		replace: true,
+		controller: "newsCtrl",
+		link: function(scope,element,attr) {
+			
+		}
+	}
+});
+
+//
+//
+//
+
+//
+//###News Module###END
 //
 angular.module("pouchy.modal",[])
 .run(["$templateRequest",function($templateRequest) {
@@ -593,11 +647,13 @@ angular.module("pouchy.FileReader",["pouchy.import_export"])
 					reader.readAsText(changeEvent.target.files[0]);
 				} else {
 					console.log("File Extension Error");
-					$modalService.open({template:"fileExtensionError",barColor:"red"}).
-					then(function() {
-						console.log("resolved");
-					},function() {
-						console.log("rejected");
+					scope.$apply(function(){
+						$modalService.open({template:"fileExtensionError",barColor:"red"}).
+						then(function() {
+							console.log("resolved");
+						},function() {
+							console.log("rejected");
+						})
 					});
 				}
 			});
@@ -723,10 +779,18 @@ angular.module("pouchy.pouchDB",[])
 			});
 		}
 	}
+	$scope.toggleConfig = function() {
+		$scope.showConfig = !$scope.showConfig;
+	}
 	$msgBusService.get("remoteconnection:lost",$scope,function() {
 		$scope.$apply(function() {
 			$scope.switchStatus = false;
-			//switch message lamp ########################### to add
+			$modalService.open({template:"connectionError",barColor:"red",remote:DATALAYER.databaseConfig.remoteUrl}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
+			});
 		})
 	});
 }])
@@ -735,27 +799,63 @@ angular.module("pouchy.pouchDB",[])
 	var couchMode = _global.databaseConfig.dbMode === "couchDB";
 	var remote = _global.databaseConfig.autoSync === true;
 	
+	var tmpConfig = 	"<div class='absolute slider-remote-config-dropdown'>" +
+							"<div class='slider-remote-config-framer'>" +
+								"<h4>Remote-Einstellungen</h4>" +
+								"<div class='slider-remote-config-content'>" +
+									"<div class='slider-remote-config-content-part1'>" +
+										"Remote-Url: " +
+									"</div>" +
+									"<div class='slider-remote-config-content-part2'>" +
+										"<input type='text' class='form-control' />" +
+									"</div>" +
+								"</div>" +
+								"<div class='slider-remote-config-content'>" +
+									"<div class='slider-remote-config-content-part1'>" +
+										"Login: " +
+									"</div>" +
+									"<div class='slider-remote-config-content-part2'>" +
+										"<input type='text' class='form-control' />" +
+									"</div>" +
+								"</div>" +
+								"<div class='slider-remote-config-content'>" +
+									"<div class='slider-remote-config-content-part1'>" +
+										"Passwort: " +
+									"</div>" +
+									"<div class='slider-remote-config-content-part2'>" +
+										"<input type='password' class='form-control' />" +
+									"</div>" +
+								"</div>" +
+							"</div>" +
+							"<center class='margin-bottom-15'><button class='btn btn-default'>Log-In</button></center>" +
+						"</div>";
 	return {
 		restrict: "E",
 		scope: {},
 		replace: true,
 		controller: "switchCtrl",
 		template: 	"<div class='inline-block'>" +
-						"<div class='inline-block padding-left-25' ng-show='showSwitch'>" +
-							"<div class='small-letters white'>Sync Mode</div>" +
-							"<div>" +
-								"<label class='switch'>" +
-									"<input id='switcher' type='checkbox' ng-model='switchStatus' ng-click='switchChange()' >" +
-									"<div class='slider round'></div>" +
-								"</label>" +
+						"<div class='slider-wrapper relative' ng-class={'show-config':showConfig}>" +
+							"<div class='inline-block padding-left-25' ng-show='showSwitch'>" +
+								"<div class='small-letters white'>Sync Mode</div>" +
+								"<div>" +
+									"<label class='switch'>" +
+										"<input id='switcher' type='checkbox' ng-model='switchStatus' ng-click='switchChange()'>" +
+										"<div class='slider round'></div>" +
+									"</label>" +
+								"</div>" +
+							"</div>" + 
+							"<div class='inline-block slider-remote-message'>" +
+								"<div class='slider-remote-message-content'>" +
+									"<span ng-if='switchStatus' class='slide-remote-online'>ONLINE</span>" +
+									"<span ng-if='!switchStatus' class='slide-remote-offline'>OFFLINE</span>" +
+								"</div>" + 
 							"</div>" +
-						"</div>" + 
-						//"<div class='inline-block switch-remote-message'>" +
-						//	"<div class='small-letters white'></div>" +
-						//	"<div class='switch-remote-message-content'>" +
-						//		"CONTENT" +
-						//	"</div>" + 
-						//"</div>" +
+							"<div class='inline-block slider-remote-config' ng-click='toggleConfig()' ng-init='showConfig = false'>" +
+								"<span class='glyphicon glyphicon-cloud glyphicon-30 glyphicon-a'></span>" +
+							"</div>" +
+							tmpConfig +
+						"</div>" +
 					"</div>",
 		link: function(scope,elemt,attr) {
 			(couchMode === true) ? scope.showSwitch = true : "";
