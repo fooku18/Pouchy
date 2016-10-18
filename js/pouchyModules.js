@@ -16,20 +16,16 @@ angular.module("pouchy.multiPurpose",[])
 	};
 	return msgBus;
 }])
-.factory("$hashService",function() {
-	var hash = function(str, asString, seed) {
-		var i, l,
-			hval = (seed === undefined) ? 0x811c9dc5 : seed;
-
-		for (i = 0, l = str.length; i < l; i++) {
-			hval ^= str.charCodeAt(i);
-			hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+.factory("$hashService",function() {	
+	var hash = function(val) {
+		var hash = 0, i, chr, len;
+		if (val.length === 0 || typeof(val) !== "string") return hash;
+		for (i = 0, len = val.length; i < len; i++) {
+			chr   = val.charCodeAt(i);
+			hash  = ((hash << 5) - hash) + chr;
+			hash |= 0; // Convert to 32bit integer
 		}
-		if( asString ){
-			// Convert to 8 digit hex string
-			return ("0000000" + (hval >>> 0).toString(16)).substr(-8);
-		}
-		return hval >>> 0;
+		return hash;
 	};
 	
 	return {
@@ -146,11 +142,11 @@ var tmp = 	"<div class='context-info absolute'>" +
 });
 
 //
-//
+//###News Module###END
 //
 
 //
-//###News Module###END
+//###Modal Module###START
 //
 angular.module("pouchy.modal",[])
 .run(["$templateRequest",function($templateRequest) {
@@ -194,7 +190,7 @@ angular.module("pouchy.modal",[])
 		scope: {},
 		template: 	"<div ng-show='modalShow'>" +
 						"<div class='custom-modal-overlay'></div>" +
-						"<div class='custom-modal-dialog'>" + 
+						"<div class='custom-modal-dialog' ng-class='{\"custom-modal-stretch\":modalStretch}'>" + 
 							"<div class='custom-modal-bar {{barColor}}'>&nbsp;</div>" +
 							"<div class='custom-modal-icon'><span ></span></div>" +
 							"<button ng-click='modalHide()' type='button' class='btn btn-default custom-modal-close' style='padding: 3px 3px;'>" +
@@ -208,7 +204,6 @@ angular.module("pouchy.modal",[])
 						"</div>" +
 					"</div>",
 		link: function(scope,elem,attr) {
-			//scope.barColor = "custom-modal-bar-green";
 			scope.modalShow = null;
 			scope.modalHide = function() {
 				$modalService.reject();
@@ -223,6 +218,11 @@ angular.module("pouchy.modal",[])
 				scope.values = {};
 				scope.barColor = "custom-modal-bar-" + options.barColor;
 				scope.modalTemplate = "templates/modal/" + options.template + ".html";
+				if(options.template === "create") {
+					scope.modalStretch = true;
+				} else {
+					scope.modalStretch = false;
+				}
 				scope.remote = options.remote;
 				if(options.data) scope.values = options.data;
 				scope.modalShow = true;
@@ -244,7 +244,7 @@ angular.module("pouchy.modal",[])
 	}
 }]);
 //
-//###Modal Module###START
+//###Modal Module###END
 //
 
 //
@@ -720,6 +720,7 @@ angular.module("pouchy.pouchDB",[])
 		}
 		remoteOff = false;
 		if(syncClosure) syncClosure.cancel();
+		console.log(remoteDatabase + db);
         syncClosure = database[db].sync(remoteDatabase + db,
 			{
 				live: true,
@@ -910,10 +911,16 @@ angular.module("pouchy.pageLogic",[])
 	}
 	
 	$scope.addItem = function(data) {
-		if(!data["_id"] || data["_id"] === "") data["_id"] = new Date().toISOString();
-		if(db === "campaigns_db") {
-			data["campid"] = $hashService.hash(data["_id"]).toString();
-		}
+		var hashVal = (function(data) {
+			var conc = "";
+			for(var key in data) {
+				if(data.hasOwnProperty(key)) {
+					conc += data[key];
+				}
+			}
+			return Math.abs($hashService.hash(conc)).toString();
+		})(data);
+		data["_id"] = hashVal;
 		$pouchDB.addItem(db,data).then(function(doc) {
 			if($scope.userForm) {
 				$scope.c = {};
@@ -977,7 +984,7 @@ angular.module("pouchy.pageLogic",[])
 	$scope.startListening(db);
 	$scope.fetchInitial();
 }])
-.controller("cidCtrl",["$scope","$rootScope","$msgBusService","$pouchDB","$modalService",function cidController($scope,$rootScope,$msgBusService,$pouchDB,$modalService) {
+.controller("cidCtrl",["$scope","$rootScope","$msgBusService","$pouchDB","$modalService","$pouchyWorker",function cidController($scope,$rootScope,$msgBusService,$pouchDB,$modalService,$pouchyWorker) {
 	$scope.intelliAdCampaigns = [];
 	$scope.extCampaigns = [];
 	$scope.intCampaigns = [];
@@ -987,22 +994,34 @@ angular.module("pouchy.pageLogic",[])
 		$scope.userForm.$setUntouched();
 	});
 	
+	//TEMPLATE USAGE WORKER
+	/*var fn = 	"function(doc) {" + 
+					"var id = [];" +
+					"for(var i=0;i<doc.rows.length;i++) {" +
+						"id.push(doc.rows[i].id);" +
+					"}" + 
+					"return id;" +
+				"}";
+	$pouchyWorker.callWorker("campaigns_db",fn).then(function(doc) {
+		console.log(doc);
+	});*/
+	
 	$scope.checkWID = function(value,intext) {
 		var campaign;
 		(intext === "extern") ? campaign = "extcampaign" : campaign = "intcampaign";
 		$pouchDB.fetchAllDocs("cid_db")
-			.then(function(data) {
-				var counter = 0;
-				for(var i = 0; i<=data.rows.length-1;i++) {
-					if(data.rows[i].doc[campaign] === value) {
-						counter++;
-					}
+		.then(function(data) {
+			var counter = 0;
+			for(var i = 0; i<=data.rows.length-1;i++) {
+				if(data.rows[i].doc[campaign] === value) {
+					counter++;
 				}
-				counter++;
-				var counterLength = counter.toString().length;
-				var wid = Array(6-counterLength).join("0") + counter.toString();
-				$scope.values.adid = wid;
-			});
+			}
+			counter++;
+			var counterLength = counter.toString().length;
+			var wid = Array(6-counterLength).join("0") + counter.toString();
+			$scope.values.adid = wid;
+		});
 	};
 	
 	//fetch other db information
@@ -1178,6 +1197,7 @@ angular.module("pouchy.pageLogic",[])
 		}
 	}
 })
+// unfinished ->
 .directive("toolTip",function toolTipDirective() {
 	return {
 		restrict: "E",
@@ -1198,4 +1218,30 @@ angular.module("pouchy.pageLogic",[])
 });
 //
 //###AppLogic Module###START
+//
+
+//
+//###Worker Module###START
+//
+angular.module("pouchy.worker",[])
+.service("$pouchyWorker",["$pouchDB","$q",function pouchyWorkerService($pouchDB,$q) {
+	function serviceCaller(db,fn) {
+		var defer = $q.defer();
+		$pouchDB.fetchAllDocs(db).then(function(doc) {
+			var worker = new Worker("worker/datasetWorker.js");
+			worker.addEventListener("message",function(e) {
+				defer.resolve(e.data);
+			},false);
+			var workerParameter = {doc:JSON.stringify(doc),fn:fn};
+			worker.postMessage(workerParameter);
+		});
+		return defer.promise;
+	}
+	
+	return {
+		callWorker: serviceCaller
+	} 
+}]);
+//
+//###Worker Module###END
 //

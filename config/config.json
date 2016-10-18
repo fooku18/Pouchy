@@ -6,7 +6,7 @@
 		"databases": ["campaigns_db","intelliad_db","channelid_db","cid_db"],
 		"autoSync": true,
 		"dbMode": "couchDB",
-		"remoteUrl": "http://127.0.0.1:5984/"
+		"remoteUrl": "http://couchmin:YFYeEwNTDEYJvaMMV101@127.0.0.1:5984/"
 	},
 	"routingConfig": {
 		"htmlPath": ["templates/kampagnen.html","templates/intelliad.html","templates/channelID.html","templates/create.html"],

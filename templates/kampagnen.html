@@ -24,7 +24,7 @@
 						<div class="my-arrow-up"></div>
 					</div>
 					<p class="help-block my-info-box">Eine eindeutige Auswahl muss getroffen werden.</p>
-				</div>
+				</div>	
 			</div>
 			<div class="col-md-2 col-sm-2 form-group" ng-class="{'has-error': userForm.cIntExt.$invalid && !userForm.cIntExt.$pristine }">
 				<div class="padding-bottom-5">
@@ -79,9 +79,9 @@
 	<div class="row">
 		<div class="col-md-12 col-sm-12">
 			<table class="table table-responsive table-hover">
-				<th>ID</th><th>Titel</th><th>Typ</th><th>Intern/Extern</th><th>Start</th><th>Ende</th><th style="text-align: center;">Löschen</th>
+				<!--<th>ID</th>--><th>Titel</th><th>Typ</th><th>Intern/Extern</th><th>Start</th><th>Ende</th><th style="text-align: center;">Löschen</th>
 				<tr ng-repeat="(key,value) in items track by $index">
-					<td>{{value.doc.campid}}</td>
+					<!--<td>{{value.doc._id}}</td>-->
 					<td>{{value.doc.name}}</td>
 					<td>{{value.doc.type}}</td>
 					<td>{{value.doc.intext}}</td>
