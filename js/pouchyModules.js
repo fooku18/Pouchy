@@ -766,22 +766,9 @@ angular.module("pouchy.pouchDB",[])
 		return database[db].remove(id,rev);
 	}*/
 }])
-.controller("switchCtrl",["$scope","$pouchDB","$currentDB","DATALAYER","$msgBusService","$modalService","$pouchyModel", function switchController($scope,$pouchDB,$currentDB,DATALAYER,$msgBusService,$modalService,$pouchyModel) {
+.controller("switchCtrl",["$scope","$pouchDB","DATALAYER","$msgBusService","$modalService","$pouchyModel", function switchController($scope,$pouchDB,DATALAYER,$msgBusService,$modalService,$pouchyModel) {
 	$scope.switchChange = function() {
-		if($scope.switchStatus) {
-			//$pouchDB.startSyncing($currentDB.getDB(),DATALAYER.databaseConfig.remoteUrl);
-			$pouchyModel.startSyncing();
-		} else {
-			$pouchyModel.stopSyncing();
-			/*$pouchDB.stopSyncing().then(function() {
-				$modalService.open({template:"connectionError",barColor:"red",remote:DATALAYER.databaseConfig.remoteUrl}).
-				then(function() {
-					console.log("resolved");
-				},function() {
-					console.log("rejected");
-				});
-			});*/
-		}
+		($scope.switchStatus) ? $pouchyModel.startSyncing() : $pouchyModel.stopSyncing();
 	}
 	$scope.toggleConfig = function() {
 		$scope.showConfig = !$scope.showConfig;
@@ -915,7 +902,7 @@ angular.module("pouchy.model",[])
 	this.stopSyncing = function() {
 		if(self.syncHandlerCount) {
 			angular.forEach(self.syncHandlerCount,function(key) {
-				if(typeof(key) === "function") key();
+				key.cancel();
 			});
 		}
 	}
@@ -981,34 +968,16 @@ angular.module("pouchy.model",[])
 		//although the user has the choice to retry syncing in UI - there is an option to change the standart remote options in UI
 		self.startSyncing();
 	}
-}]);
-//
-//###PouchyModel Module###END
-//
-
-//
-//###AppLogic Module###START
-//
-angular.module("pouchy.pageLogic",[])
-.service("$currentDB",function currentDBService() {
-	var currentDB;
-	this.dbChanger = function(val) {
-		currentDB = val;
-	}
-	this.getDB = function() {
-		return currentDB;
-	}
-})
+}])
 //mainCtrl is initilized on every new tab - this is to prevent too much scope overhead for non relevant data as 
 //all database data is present in the background service
-.controller("mainCtrl",["$scope","$rootScope","$pouchDB","$hashService","$msgBusService","$attrs","$modalService","$currentDB","$pouchyModel","$pouchyModelDatabase",function mainController($scope,$rootScope,$pouchDB,$hashService,$msgBusService,$attrs,$modalService,$currentDB,$pouchyModel,$pouchyModelDatabase) {
+.controller("mainCtrl",["$scope","$rootScope","$pouchDB","$hashService","$msgBusService","$attrs","$modalService","$pouchyModel","$pouchyModelDatabase",function mainController($scope,$rootScope,$pouchDB,$hashService,$msgBusService,$attrs,$modalService,$pouchyModel,$pouchyModelDatabase) {
 	//fetch database name from template attribute - this is important to seperate the data from the model service
 	var db = $attrs.db;
 	//initial on scope creation in case model already exists
 	(function() {
 		$scope.items = $pouchyModelDatabase.database[db];
 		console.log($pouchyModelDatabase.database[db]); // <-----------------------------------DELETE
-		$currentDB.dbChanger(db);
 	}());
 	//update scope if model changes due UI-input
 	$msgBusService.get(db + ":change",$scope,function(event,data) {
@@ -1062,118 +1031,60 @@ angular.module("pouchy.pageLogic",[])
 			console.log("Aborted");
 		});
 	}
-	
-	
-	
-	
-	
-	
-	
-	/*$scope.startListening = function(val) {
-		$currentDB.dbChanger(db);
-		$pouchDB.startListening(val);
-	}*/
-	
-	/*$scope.validation = function(val,data) {
-		if(val) {
-			$scope.addItem(data);
-			$modalService.open({template:"success",barColor:"green"}).
-			then(function() {
-				console.log("resolved");
-			},function() {
-				console.log("rejected");
-			});
-		} else {
-			$modalService.open({template:"invalid",barColor:"red"}).
-			then(function() {
-				console.log("resolved");
-			},function() {
-				console.log("rejected");
+}])
+.directive("datepicker",function datepickerDirective() {
+	return {
+		restrict: "A",
+		link: function(scope,elem,attr) {
+			$(elem).datepicker({
+				dateFormat: "dd.mm.yy",
+				dayNamesMin: ["So","Mo","Di","Mi","Do","Fr","Sa"],
+				monthNames: [ "Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember" ],
+				autoSize: true
 			});
 		}
 	}
-	
-	$scope.addItem = function(data) {
-		var hashVal = (function(data) {
-			var conc = "";
-			for(var key in data) {
-				if(data.hasOwnProperty(key)) {
-					conc += data[key];
-				}
-			}
-			return Math.abs($hashService.hash(conc)).toString();
-		})(data);
-		data["_id"] = hashVal;
-		$pouchDB.addItem(db,data).then(function(doc) {
-			if($scope.userForm) {
-				$scope.c = {};
-				$scope.userForm.$setPristine();
-				$scope.userForm.$setUntouched();
-			}
-			console.log(doc._id + " created!");
-		});
-	};
-	
-	$scope.fetchAll = function(val) {
-		$pouchDB.fetchAllDocs(val).then(function(docs) {
-			$scope.items = [];
-			for(var i=0;i<=docs.rows.length-1;i++) {
-				($scope.items).push(docs.rows[i]);
-			}
-		});
-	}
-	
-	$scope.fetchInitial = function() {
-		$scope.fetchAll(db);
-		$msgBusService.get(db + ":change",$scope,
-			function(event,data) {
-				$scope.fetchAll(db);
-			}
-		);
-		$msgBusService.get(db + ":delete",$scope,
-			function(event,data) {
-				$scope.$apply(function() {
-					for(var i=0;i<=$scope.items.length-1;i++) {
-						if($scope.items[i].id === data.id) {
-							$scope.items.splice(i,1);
-							break;
+})
+.directive("validateDate", function validateDateDirective() {
+	return {
+	   restrict: 'A',
+	   require: 'ngModel',
+	   link: function(scope, ele, attrs, ctrl){
+			scope.$watch(attrs.ngModel,function(datesObj) {
+				if(datesObj !== undefined) {
+					if(datesObj["Start"] && datesObj["End"]) {
+						var dayEnd = datesObj.End.substring(0,2);
+						var monthEnd = datesObj.End.substring(3,5);
+						var yearEnd = datesObj.End.substring(6,10);
+						var dayStart = datesObj.Start.substring(0,2);
+						var monthStart = datesObj.Start.substring(3,5);
+						var yearStart = datesObj.Start.substring(6,10);
+						if(new Date(monthStart + "/" + dayStart + "/" + yearStart) <= new Date(monthEnd + "/" + dayEnd + "/" + yearEnd)) {
+							ctrl.$setValidity("wrongDatePeriod",true);
+						} else {
+							ctrl.$setValidity("wrongDatePeriod",false);
 						}
 					}
-				});
-			}
-		);
+				}
+			},true);
+	   }
 	}
-	
-	$scope.deleteItem = function(doc) {
-		$modalService.open({template:"delete",barColor:"red",data:doc.info}).then(function() {
-			$pouchDB.deleteDoc(db,doc.id,doc.rev);
-			console.log(doc.id + " deleted");
-		},function() {
-			console.log("Aborted");
-		});
-	}*/
-	
-	$scope.showModal = function(data) {
-		$msgBusService.emit("cid_create:modal");
-		$modalService.open({template:"create",barColor:"blue",data:data}).then(function(data) {
-			$scope.addItem(data);
-			console.log("resolved");
-		}, function() {
-			console.log("rejected");
-		});
-	}
-	
-	//initialize
-	//$scope.startListening(db);
-	//$scope.fetchInitial();
-}])
-.controller("cidCtrl",["$scope","$rootScope","$msgBusService","$pouchDB","$modalService","$pouchyWorker",function cidController($scope,$rootScope,$msgBusService,$pouchDB,$modalService,$pouchyWorker) {
+});
+//
+//###PouchyModel Module###END
+//
+
+//
+//###CID-Logic Module###START
+//
+angular.module("pouchy.cidLogic",[])
+.controller("cidCtrl",["$scope","$msgBusService","$pouchDB","$modalService","$pouchyWorker",function cidController($scope,$msgBusService,$pouchDB,$modalService,$pouchyWorker) {
 	$scope.intelliAdCampaigns = [];
 	$scope.extCampaigns = [];
 	$scope.intCampaigns = [];
 	$scope.creativeChannel = [];
 	
-	$msgBusService.get("cid_create:modal",$scope,function() {
+	/*$msgBusService.get("cid_create:modal",$scope,function() {
 		$scope.userForm.$setUntouched();
 	});
 	
@@ -1189,7 +1100,7 @@ angular.module("pouchy.pageLogic",[])
 		console.log(doc);
 	});*/
 	
-	$scope.checkWID = function(value,intext) {
+	/*$scope.checkWID = function(value,intext) {
 		var campaign;
 		(intext === "extern") ? campaign = "extcampaign" : campaign = "intcampaign";
 		$pouchDB.fetchAllDocs("cid_db")
@@ -1331,46 +1242,30 @@ angular.module("pouchy.pageLogic",[])
 		data.cid = cid;
 		
 		return data;
-	}
+	}*/
 }])
-.directive("datepicker",function() {
+.directive("cidModal",["$modalService",function cidModalDirective($modalService) {
 	return {
 		restrict: "A",
-		link: function(scope,elem,attr) {
-			$(elem).datepicker({
-				dateFormat: "dd.mm.yy",
-				dayNamesMin: ["So","Mo","Di","Mi","Do","Fr","Sa"],
-				monthNames: [ "Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember" ],
-				autoSize: true
+		scope: {
+			cidData: "@"
+		},
+		controller: "cidCtrl",
+		link: function(scope,element,attr) {
+			element.on("click",function() {
+				scope.$apply(function() {
+					console.log(scope.cidData);
+					$modalService.open({template:"create",barColor:"white",data:scope.cidData}).
+					then(function() {
+						console.log("resolved");
+					},function() {
+						console.log("rejected");
+					})
+				});
 			});
 		}
 	}
-})
-.directive("validateDate", function validateDateDirective() {
-	return {
-	   restrict: 'A',
-	   require: 'ngModel',
-	   link: function(scope, ele, attrs, ctrl){
-			scope.$watch(attrs.ngModel,function(datesObj) {
-				if(datesObj !== undefined) {
-					if(datesObj["Start"] && datesObj["End"]) {
-						var dayEnd = datesObj.End.substring(0,2);
-						var monthEnd = datesObj.End.substring(3,5);
-						var yearEnd = datesObj.End.substring(6,10);
-						var dayStart = datesObj.Start.substring(0,2);
-						var monthStart = datesObj.Start.substring(3,5);
-						var yearStart = datesObj.Start.substring(6,10);
-						if(new Date(monthStart + "/" + dayStart + "/" + yearStart) <= new Date(monthEnd + "/" + dayEnd + "/" + yearEnd)) {
-							ctrl.$setValidity("wrongDatePeriod",true);
-						} else {
-							ctrl.$setValidity("wrongDatePeriod",false);
-						}
-					}
-				}
-			},true);
-	   }
-	}
-})
+}])
 .directive("widCheck",function widCheckDirective() {
 	return {
 		link: function(scope,elemt,attr) {
@@ -1380,27 +1275,8 @@ angular.module("pouchy.pageLogic",[])
 		}
 	}
 })
-// unfinished ->
-.directive("toolTip",function toolTipDirective() {
-	return {
-		restrict: "E",
-		scope: {},
-		replace: true,
-		template: "<div ng-show='tip'>{{tipText}}</div>",
-		link: function(scope,elemt,attr) {
-			elemt.on("focus",function() {
-				scope.tipText = attr.tip;
-				console.log(scope.tipText);
-				scope.tip = true;
-			});
-			elemt.on("blur",function() {
-				console.log("HUND");
-			});
-		}
-	}
-});
 //
-//###AppLogic Module###START
+//###CID-Logic Module###END
 //
 
 //
