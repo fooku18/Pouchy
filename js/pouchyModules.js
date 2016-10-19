@@ -669,7 +669,7 @@ angular.module("pouchy.FileReader",["pouchy.import_export"])
 //
 angular.module("pouchy.pouchDB",[])
 .service("$pouchDB",["$rootScope","$q","$msgBusService","DATALAYER",function($rootScope,$q,$msgBusService,DATALAYER) {
-	var database = {};
+	/*var database = {};
 	var changeHandler;
 	var syncClosure;
 	var remote = DATALAYER.databaseConfig.remoteUrl || "";
@@ -736,6 +736,7 @@ angular.module("pouchy.pouchDB",[])
 			console.log(info);
 		}).on('error', function (err) {
 			console.log("connection error");
+			console.log(err);
 			remoteOff = true;
 			$msgBusService.emit("remoteconnection:lost");
 		});
@@ -763,21 +764,23 @@ angular.module("pouchy.pouchDB",[])
 	
 	this.deleteDoc = function(db,id,rev) {
 		return database[db].remove(id,rev);
-	}
+	}*/
 }])
-.controller("switchCtrl",["$scope","$pouchDB","$currentDB","DATALAYER","$msgBusService","$modalService", function switchController($scope,$pouchDB,$currentDB,DATALAYER,$msgBusService,$modalService) {
+.controller("switchCtrl",["$scope","$pouchDB","$currentDB","DATALAYER","$msgBusService","$modalService","$pouchyModel", function switchController($scope,$pouchDB,$currentDB,DATALAYER,$msgBusService,$modalService,$pouchyModel) {
 	$scope.switchChange = function() {
 		if($scope.switchStatus) {
-			$pouchDB.startSyncing($currentDB.getDB(),DATALAYER.databaseConfig.remoteUrl);
+			//$pouchDB.startSyncing($currentDB.getDB(),DATALAYER.databaseConfig.remoteUrl);
+			$pouchyModel.startSyncing();
 		} else {
-			$pouchDB.stopSyncing().then(function() {
+			$pouchyModel.stopSyncing();
+			/*$pouchDB.stopSyncing().then(function() {
 				$modalService.open({template:"connectionError",barColor:"red",remote:DATALAYER.databaseConfig.remoteUrl}).
 				then(function() {
 					console.log("resolved");
 				},function() {
 					console.log("rejected");
 				});
-			});
+			});*/
 		}
 	}
 	$scope.toggleConfig = function() {
@@ -868,6 +871,120 @@ angular.module("pouchy.pouchDB",[])
 //###PouchDB Module###END
 //
 
+//
+//###PouchyModel Module###START
+//
+angular.module("pouchy.model",[])
+.factory("$pouchyModelDatabase",function pouchyModelDatabaseFactory() {
+	function dataBaseFn(name,val) {
+		database[name] = val;
+	};
+	var database = {};
+	return {
+		database: database,
+		dataBaseFn: dataBaseFn
+	}
+})
+.service("$pouchyModel",["$q","DATALAYER","$msgBusService","$pouchyModelDatabase",function pouchyModelService($q,DATALAYER,$msgBusService,$pouchyModelDatabase) {
+	var self = this;
+	this.dbCount = 0;
+	this.syncHandlerCount = [];
+	this.databaseContainer = {};
+	//the service catches all databases and sync them
+	this.startSyncing = function() {
+		var remote = DATALAYER.databaseConfig.remoteUrl || "";
+		if(self.dbCount === DATALAYER.databaseConfig.databases.length) {
+			for(var key in self.databaseContainer) {
+				if(self.databaseContainer[key].db._events.destroyed.length > 4) {
+					self.databaseContainer[key].db._events.destroyed = self.databaseContainer[key].db._events.destroyed.slice(0,4);
+				}
+				syncHandler = self.databaseContainer[key].db.sync(remote + key,{
+					live: true,
+					retry: false
+				}).on("error",function(err) {
+					console.log(err);
+					self.syncHandlerCount = [];
+					$msgBusService.emit("remoteconnection:lost");
+				}).on("complete",function(info) {
+					console.log(info);
+				});
+				self.syncHandlerCount.push(syncHandler);
+			}
+		}
+	}
+	this.stopSyncing = function() {
+		if(self.syncHandlerCount) {
+			angular.forEach(self.syncHandlerCount,function(key) {
+				if(typeof(key) === "function") key();
+			});
+		}
+	}
+	this.initDatabase = function(databaseName) {
+		function updateViewModel() {
+			db.allDocs({
+				descending: true,
+				include_docs: true
+			}).then(function(docs) {
+				var model = [];
+				for(var i=0;i<docs.rows.length;i++) {
+					model.push(docs.rows[i]);
+				}
+				$pouchyModelDatabase.dataBaseFn(dbName,model);
+				$msgBusService.emit(dbName + ":change", $pouchyModelDatabase.database[dbName]);
+			},function(err) {
+				console.log(err);
+			});
+		}
+		function addItem(data) {
+			var defer = $q.defer();			
+			db.put(data).then(function() {
+				console.log("resolved");
+				defer.resolve(data);
+			}, function() {
+				console.log("rejected");
+				defer.reject();
+			});
+			return defer.promise;			
+		}
+		function deleteItem(id,rev) {
+			var defer = $q.defer();
+			db.remove(id,rev).then(function(data) {
+				console.log("deleted");
+				defer.resolve(data);
+			}, function() {
+				defer.reject();
+			});
+			return defer.promise;
+		}
+		var dbName;
+		var db = new PouchDB(databaseName);
+		//dbCount counts up to the max number of databases - this is necessary so that the syncing process only starts when
+		//all databases are set up
+		self.dbCount++;
+		dbName = databaseName;
+		//this method kicks in the auto sync mode for pouchdb
+		db.changes({
+			since: "now",
+			live: true,
+			include_docs: true
+		}).on("change",updateViewModel);
+		//the databaseContainer contains all databases and relevant methods for adding, updating, deleting and 
+		//auto-updating datasets in its enclosed database scope
+		self.databaseContainer[dbName] = {
+			db: db,
+			addItem: addItem,
+			deleteItem: deleteItem
+		}
+		//initial view model update - this kicks in the scope for the current UI tab
+		updateViewModel();
+		//auto syncing attempt - if unsuccessful app will work in offline mode
+		//although the user has the choice to retry syncing in UI - there is an option to change the standart remote options in UI
+		self.startSyncing();
+	}
+}]);
+//
+//###PouchyModel Module###END
+//
 
 //
 //###AppLogic Module###START
@@ -882,16 +999,82 @@ angular.module("pouchy.pageLogic",[])
 		return currentDB;
 	}
 })
-.controller("mainCtrl",["$scope","$rootScope","$pouchDB","$hashService","$msgBusService","$attrs","$modalService","$currentDB",function mainController($scope,$rootScope,$pouchDB,$hashService,$msgBusService,$attrs,$modalService,$currentDB) {
+//mainCtrl is initilized on every new tab - this is to prevent too much scope overhead for non relevant data as 
+//all database data is present in the background service
+.controller("mainCtrl",["$scope","$rootScope","$pouchDB","$hashService","$msgBusService","$attrs","$modalService","$currentDB","$pouchyModel","$pouchyModelDatabase",function mainController($scope,$rootScope,$pouchDB,$hashService,$msgBusService,$attrs,$modalService,$currentDB,$pouchyModel,$pouchyModelDatabase) {
+	//fetch database name from template attribute - this is important to seperate the data from the model service
 	var db = $attrs.db;
-	$scope.items = [];
-	
-	$scope.startListening = function(val) {
+	//initial on scope creation in case model already exists
+	(function() {
+		$scope.items = $pouchyModelDatabase.database[db];
+		console.log($pouchyModelDatabase.database[db]); // <-----------------------------------DELETE
 		$currentDB.dbChanger(db);
-		$pouchDB.startListening(val);
+	}());
+	//update scope if model changes due UI-input
+	$msgBusService.get(db + ":change",$scope,function(event,data) {
+		$scope.$apply(function() {
+			$scope.items = data;
+		});
+	});
+	//UI input data need to be validated before pouch/couch is updated. Validation is defined on the relevant userforms
+	$scope.validation = function(val,data) {
+		if(val) {
+			$scope.addItem(data);
+			$modalService.open({template:"success",barColor:"green"}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
+			});
+		} else {
+			$modalService.open({template:"invalid",barColor:"red"}).
+			then(function() {
+				console.log("resolved");
+			},function() {
+				console.log("rejected");
+			});
+		}
+		//clean input fields from validation errors after button fired
+		$scope.c = {};
+		$scope.userForm.$setPristine();
+	}
+	//if validation succeeds UI data is beeing added
+	$scope.addItem = function(data) {
+		//concatenate and hash input -> use as couchdb _id
+		var hashVal = (function(data) {
+			var conc = "";
+			for(var key in data) {
+				if(data.hasOwnProperty(key)) {
+					conc += data[key];
+				}
+			}
+			return Math.abs($hashService.hash(conc)).toString();
+		})(data);
+		data["_id"] = hashVal;
+		$pouchyModel.databaseContainer[db].addItem(data);
+	}
+	//UI delete data
+	$scope.deleteItem = function(doc) {
+		$modalService.open({template:"delete",barColor:"red",data:doc.info}).then(function() {
+			$pouchyModel.databaseContainer[db].deleteItem(doc.id,doc.rev);
+			console.log(doc.id + " deleted");
+		},function() {
+			console.log("Aborted");
+		});
 	}
 	
-	$scope.validation = function(val,data) {
+	
+	
+	
+	
+	
+	
+	/*$scope.startListening = function(val) {
+		$currentDB.dbChanger(db);
+		$pouchDB.startListening(val);
+	}*/
+	
+	/*$scope.validation = function(val,data) {
 		if(val) {
 			$scope.addItem(data);
 			$modalService.open({template:"success",barColor:"green"}).
@@ -968,7 +1151,7 @@ angular.module("pouchy.pageLogic",[])
 		},function() {
 			console.log("Aborted");
 		});
-	}
+	}*/
 	
 	$scope.showModal = function(data) {
 		$msgBusService.emit("cid_create:modal");
@@ -981,8 +1164,8 @@ angular.module("pouchy.pageLogic",[])
 	}
 	
 	//initialize
-	$scope.startListening(db);
-	$scope.fetchInitial();
+	//$scope.startListening(db);
+	//$scope.fetchInitial();
 }])
 .controller("cidCtrl",["$scope","$rootScope","$msgBusService","$pouchDB","$modalService","$pouchyWorker",function cidController($scope,$rootScope,$msgBusService,$pouchDB,$modalService,$pouchyWorker) {
 	$scope.intelliAdCampaigns = [];
