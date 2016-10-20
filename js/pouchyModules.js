@@ -208,6 +208,7 @@ angular.module("pouchy.modal",[])
 			scope.modalHide = function() {
 				$modalService.reject();
 				scope.modalShow = null;
+				scope.modalTemplate = "templates/modal/success.html";
 			};
 			scope.confirm = function() {
 				$modalService.resolve();
@@ -862,16 +863,20 @@ angular.module("pouchy.pouchDB",[])
 //###PouchyModel Module###START
 //
 angular.module("pouchy.model",[])
-.factory("$pouchyModelDatabase",function pouchyModelDatabaseFactory() {
+//this factory serves as a model distributor for interested parties. the factory gets updated with every UI change
+.factory("$pouchyModelDatabase",["$msgBusService",function pouchyModelDatabaseFactory($msgBusService) {
 	function dataBaseFn(name,val) {
 		database[name] = val;
+		console.log(database);           // <---------------------------------------------DELETE
 	};
 	var database = {};
 	return {
 		database: database,
 		dataBaseFn: dataBaseFn
 	}
-})
+}])
+//pouchy model is the heart of the application. it initializes the pouchdb databases on app launch and keeps the container
+//up to date on any UI change. the model changes are saved in the above factory which serves as a data distributor
 .service("$pouchyModel",["$q","DATALAYER","$msgBusService","$pouchyModelDatabase",function pouchyModelService($q,DATALAYER,$msgBusService,$pouchyModelDatabase) {
 	var self = this;
 	this.dbCount = 0;
@@ -971,7 +976,7 @@ angular.module("pouchy.model",[])
 }])
 //mainCtrl is initilized on every new tab - this is to prevent too much scope overhead for non relevant data as 
 //all database data is present in the background service
-.controller("mainCtrl",["$scope","$rootScope","$pouchDB","$hashService","$msgBusService","$attrs","$modalService","$pouchyModel","$pouchyModelDatabase",function mainController($scope,$rootScope,$pouchDB,$hashService,$msgBusService,$attrs,$modalService,$pouchyModel,$pouchyModelDatabase) {
+.controller("mainCtrl",["$scope","$rootScope","$pouchyWorker","$hashService","$msgBusService","$attrs","$modalService","$pouchyModel","$pouchyModelDatabase",function mainController($scope,$rootScope,$pouchyWorker,$hashService,$msgBusService,$attrs,$modalService,$pouchyModel,$pouchyModelDatabase) {
 	//fetch database name from template attribute - this is important to seperate the data from the model service
 	var db = $attrs.db;
 	//initial on scope creation in case model already exists
@@ -1030,8 +1035,9 @@ angular.module("pouchy.model",[])
 		},function() {
 			console.log("Aborted");
 		});
-	}
+	}	
 }])
+//jqueryUI date picker 
 .directive("datepicker",function datepickerDirective() {
 	return {
 		restrict: "A",
@@ -1045,6 +1051,8 @@ angular.module("pouchy.model",[])
 		}
 	}
 })
+//date validator - start date needs to be before end date otherwise the form gets invalid. 
+//date validator modifies ngModel for this purpose
 .directive("validateDate", function validateDateDirective() {
 	return {
 	   restrict: 'A',
@@ -1078,75 +1086,68 @@ angular.module("pouchy.model",[])
 //###CID-Logic Module###START
 //
 angular.module("pouchy.cidLogic",[])
-.controller("cidCtrl",["$scope","$msgBusService","$pouchDB","$modalService","$pouchyWorker",function cidController($scope,$msgBusService,$pouchDB,$modalService,$pouchyWorker) {
+.controller("cidCtrl",["$scope","$msgBusService","$pouchyModel","$modalService","$pouchyWorker","$pouchyModelDatabase","$hashService",function cidController($scope,$msgBusService,$pouchyModel,$modalService,$pouchyWorker,$pouchyModelDatabase,$hashService) {
 	$scope.intelliAdCampaigns = [];
 	$scope.extCampaigns = [];
 	$scope.intCampaigns = [];
 	$scope.creativeChannel = [];
-	
-	/*$msgBusService.get("cid_create:modal",$scope,function() {
-		$scope.userForm.$setUntouched();
-	});
-	
-	//TEMPLATE USAGE WORKER
-	/*var fn = 	"function(doc) {" + 
-					"var id = [];" +
-					"for(var i=0;i<doc.rows.length;i++) {" +
-						"id.push(doc.rows[i].id);" +
-					"}" + 
-					"return id;" +
-				"}";
-	$pouchyWorker.callWorker("campaigns_db",fn).then(function(doc) {
-		console.log(doc);
-	});*/
-	
-	/*$scope.checkWID = function(value,intext) {
-		var campaign;
-		(intext === "extern") ? campaign = "extcampaign" : campaign = "intcampaign";
-		$pouchDB.fetchAllDocs("cid_db")
-		.then(function(data) {
-			var counter = 0;
-			for(var i = 0; i<=data.rows.length-1;i++) {
-				if(data.rows[i].doc[campaign] === value) {
-					counter++;
-				}
-			}
-			counter++;
-			var counterLength = counter.toString().length;
-			var wid = Array(6-counterLength).join("0") + counter.toString();
-			$scope.values.adid = wid;
+	//initial combobox filling for the cid create modal window
+	(function() {
+		//intelliAdCampaigns filling
+		var fn = 	"function(doc) {" + 
+						"var campaigns = [];" +
+						"for(var i=0;i<doc.length;i++) {" +
+							"campaigns.push({" +
+								"name: doc[i].doc.name," +
+								"root: doc[i].doc.root," +
+								"ext: doc[i].doc.ext" +
+							"});" +
+						"}" + 
+						"return campaigns;" +
+					"}";
+		$pouchyWorker.callWorker("intelliad_db",fn).then(function(doc) {
+			$scope.intelliAdCampaigns = doc;
 		});
-	};
-	
-	//fetch other db information
-	(function() {$pouchDB.fetchAllDocs("intelliad_db").
-		then(function(data) {
-			for(var i=0;i<=data.rows.length-1;i++) {
-				($scope.intelliAdCampaigns).push({
-					'name':data.rows[i].doc.name,
-					'root':data.rows[i].doc.root,
-					'ext':data.rows[i].doc.ext
-				});
-			};
-		}).then(function() {
-			return $pouchDB.fetchAllDocs("campaigns_db");
-		}).then(function(data) {
-			for(var i=0;i<=data.rows.length-1;i++) {
-				if(data.rows[i].doc.intext === "Extern") {
-					($scope.extCampaigns).push(data.rows[i].doc);
-				} else {
-					($scope.intCampaigns).push(data.rows[i].doc);
-				}
-			}
-		}).then(function() {
-			return $pouchDB.fetchAllDocs("channelid_db");
-		}).then(function(data) {
-			for(var i=0;i<=data.rows.length-1;i++) {
-				($scope.creativeChannel).push(data.rows[i].doc);
-			}
+		//int/ext campaigns filling
+		fn =	"function(doc) {" + 
+					"var intcampaigns = [];" +
+					"var extcampaigns = [];" +
+					"for(var i=0;i<doc.length;i++) {" +
+						"if(doc[i].intext === 'Extern') {" +
+							"extcampaigns.push(doc[i].doc);" +
+						"} else {" +
+							"intcampaigns.push(doc[i].doc);" +
+						"}" +
+					"}" + 
+					"return [intcampaigns,extcampaigns];" +
+				"}";
+		$pouchyWorker.callWorker("campaigns_db",fn).then(function(doc) {
+			$scope.intCampaigns = doc[0];
+			$scope.extCampaigns = doc[1];
+		});
+		fn =	"function(doc) {" +
+					"var channels = [];" +
+					"for(var i=0;i<doc.length;i++) {" +
+						"channels.push(doc[i].doc);" +
+					"}" + 
+					"return channels;" +
+				"}";
+		$pouchyWorker.callWorker("channelid_db",fn).then(function(doc) {
+			$scope.creativeChannel = doc;
 		});
 	}())
-
+	$scope.checkWID = function(value,intext) {
+		var campaign;
+		(intext === "extern") ? campaign = "extcampaign" : campaign = "intcampaign";
+		var counter = 0;
+		for(var i=0; i<$pouchyModelDatabase.database["cid_db"].length; i++) {
+			if($pouchyModelDatabase.database["cid_db"][i].doc[campaign] === value) counter++;
+		}
+		counter++
+		var counterLength = counter.toString().length;
+		var wid = Array(6-counterLength).join("0") + counter.toString();
+		$scope.values.adid = wid;
+	};
 	$scope.isActive = function(val) {
 		if(val === "Extern") {
 			$scope.values.intcampaign = "";
@@ -1157,31 +1158,27 @@ angular.module("pouchy.cidLogic",[])
 			return false;
 		}
 	}
-	
 	$scope.validation = function(val,data) {
-		if(val) {
-			$scope.addToDB(data);
-			$modalService.open({template:"success",barColor:"green"}).
-			then(function() {
-				console.log("resolved");
-			},function() {
-				console.log("rejected");
-			});
-		} else {
-			$modalService.open({template:"invalid",barColor:"red"}).
-			then(function() {
-				console.log("resolved");
-			},function() {
-				console.log("rejected");
-			});
-		}
+		if(val) $scope.addItem(data);
 	}
-	
-	$scope.addToDB = function(data) {
-		addedData = $scope.doCIDLogic(data);
-		$modalService.resolve(data);
+	$scope.addItem = function(data) {
+		//concatenate and hash input -> use as couchdb _id
+		var hashVal = (function(data) {
+			var conc = "";
+			for(var key in data) {
+				if(data.hasOwnProperty(key)) {
+					conc += data[key];
+				}
+			}
+			return Math.abs($hashService.hash(conc)).toString();
+		})(data);
+		data["_id"] = hashVal;
+		$pouchyModel.databaseContainer["cid_db"].addItem(data);
 	}
-	
+}])
+.factory("cidLogic",["DATALAYER","$pouchyModelDatabase","$msgBusService",function cidLogicFactory(DATALAYER,$pouchModelDatabase,$msgBusService) {
+	function createCID() {
+		/*
 	//CID generating logic
 	$scope.doCIDLogic = function(data) {
 		if(typeof(data.extcampaign) !== "undefined" && data.extcampaign !== "") {
@@ -1243,18 +1240,31 @@ angular.module("pouchy.cidLogic",[])
 		
 		return data;
 	}*/
+	}
+	
+	return {
+		createCID: createCID
+	}
 }])
-.directive("cidModal",["$modalService",function cidModalDirective($modalService) {
+.directive("cidModal",["$pouchyModelDatabase",function($pouchyModelDatabase) {
+	return {
+		restrict: "A",
+		scope: true,
+		controller: "cidCtrl",
+		link: function(scope,element,attr) {
+			console.log($pouchyModelDatabase.database);
+		}
+	}
+}])
+.directive("cidModalCaller",["$modalService",function cidModalDirective($modalService) {
 	return {
 		restrict: "A",
 		scope: {
-			cidData: "@"
+			cidData: "="
 		},
-		controller: "cidCtrl",
 		link: function(scope,element,attr) {
 			element.on("click",function() {
 				scope.$apply(function() {
-					console.log(scope.cidData);
 					$modalService.open({template:"create",barColor:"white",data:scope.cidData}).
 					then(function() {
 						console.log("resolved");
@@ -1283,23 +1293,61 @@ angular.module("pouchy.cidLogic",[])
 //###Worker Module###START
 //
 angular.module("pouchy.worker",[])
-.service("$pouchyWorker",["$pouchDB","$q",function pouchyWorkerService($pouchDB,$q) {
+.service("$pouchyWorker",["$pouchyModelDatabase","$q",function pouchyWorkerService($pouchyModelDatabase,$q) {
+	//the following two functions are necessary to transform data to arraybuffers
+	//this gives us the opportunity to transfer data to the worker instead of just 
+	//cloning it and then passing it over - this will give the process some boost
+	//arraybuffer to string
+	//
+	//in order to use the worker we have to define our function as a string and name
+	//the database that contains our raw data. the callWorker method wraps the task
+	//into a promise and responds when finished - this enables us to use the worker 
+	//response in our controller.
+	//
+	//    EXAMPLE USAGE:
+	//---------------------------------------------------------------------------------
+	//		var fn = 	"function(doc) {" + 
+	//						"var id = [];" +
+	//						"for(var i=0;i<doc.length;i++) {" +
+	//							"id.push(doc[i].id);" +
+	//						"}" + 
+	//						"return id;" +
+	//					"}";
+	//			$pouchyWorker.callWorker("campaigns_db",fn).then(function(doc) {
+	//				//proceed with result...
+	//			});
+	//---------------------------------------------------------------------------------
+	//
+	//string to arraybuffer converter - the inverse function is wrapped in the worker.js file
+	//we use uft-16 charset so that we need 2bytes for each charater
+	function str2ab(str) {
+		var buf = new ArrayBuffer(str.length*2);
+		var bufView = new Uint16Array(buf);
+		for (var i=0;i<str.length;i++) {
+			bufView[i] = str.charCodeAt(i);
+		}
+		return buf;
+	}
+	
 	function serviceCaller(db,fn) {
 		var defer = $q.defer();
-		$pouchDB.fetchAllDocs(db).then(function(doc) {
+		//$pouchDB.fetchAllDocs(db).then(function(doc) {
+			var doc = $pouchyModelDatabase.database[db];
 			var worker = new Worker("worker/datasetWorker.js");
 			worker.addEventListener("message",function(e) {
 				defer.resolve(e.data);
 			},false);
-			var workerParameter = {doc:JSON.stringify(doc),fn:fn};
-			worker.postMessage(workerParameter);
-		});
+			//var workerParameter = {doc:JSON.stringify(doc),fn:fn};
+			var workerParameter = JSON.stringify(doc) + "UNIQUE_SEPERATOR" + fn;
+			var ab = str2ab(workerParameter)
+			worker.postMessage(ab);
+		//});
 		return defer.promise;
 	}
 	
 	return {
 		callWorker: serviceCaller
-	} 
+	}
 }]);
 //
 //###Worker Module###END

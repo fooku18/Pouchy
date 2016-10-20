@@ -1,4 +1,4 @@
-<div class="row custom-modal-modal-format">
+<div class="row custom-modal-modal-format" cid-modal>
 	<h3>Bearbeitung</h3>
 	<form name="userForm" ng-submit="validation(userForm.$valid,{
 			'_id':values._id, 
@@ -126,6 +126,12 @@
 		</div>
 		<div class="col-md-1 col-sm-1 padding-top-25">
 			<button type="submit" class="btn btn-default" id="btn-focus-on"><span class="glyphicon glyphicon-floppy-disk"></span></button>
+		</div>
+		<div class="col-md-11 col-sm-11 padding-top-25" ng-show="userForm.$submitted && userForm.$invalid" ng-class="{'has-error': userForm.$submitted && userForm.$invalid}">
+			<div class="padding-left-5">
+				<div class="my-arrow-up"></div>
+			</div>
+			<p class="help-block my-info-box">Es müssen erst alle Felder ausgefüllt werden</p>
 		</div>
 	</form>
 </div>

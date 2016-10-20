@@ -126,6 +126,10 @@ select {
 	left:0;
 }
 
+.left-25 {
+	left: 25px;
+}
+
 .bottom-0 {
 	bottom: 0;
 }
