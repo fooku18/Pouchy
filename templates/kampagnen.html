@@ -81,7 +81,8 @@
 			<table class="table table-responsive table-hover">
 				<th>Titel</th><th>Typ</th><th>Intern/Extern</th><th>Start</th><th>Ende</th><th style="text-align: center;">Löschen</th>
 				<tr ng-repeat="value in items track by $index">
-					<td>{{value.doc.name}}</td>
+					<!--<td>{{value.doc.name}}</td>-->
+					<td><input type="text" class="main-borderless-input" ng-model="value.doc.name" /></td>
 					<td>{{value.doc.type}}</td>
 					<td>{{value.doc.intext}}</td>
 					<td>{{value.doc.start}}</td>

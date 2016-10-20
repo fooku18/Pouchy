@@ -203,6 +203,12 @@ angular.module("pouchy.modal",[])
 							"</div>" +
 						"</div>" +
 					"</div>",
+		controller: ["$scope",function($scope) {
+			this.modalHideCtrl = function() {
+				$scope.modalShow = false;
+				$scope.modalTemplate = "templates/modal/success.html";
+			}
+		}],
 		link: function(scope,elem,attr) {
 			scope.modalShow = null;
 			scope.modalHide = function() {
@@ -899,6 +905,7 @@ angular.module("pouchy.model",[])
 					$msgBusService.emit("remoteconnection:lost");
 				}).on("complete",function(info) {
 					console.log(info);
+					$msgBusService.emit("remoteconnection:lost");
 				});
 				self.syncHandlerCount.push(syncHandler);
 			}
@@ -1014,17 +1021,20 @@ angular.module("pouchy.model",[])
 	}
 	//if validation succeeds UI data is beeing added
 	$scope.addItem = function(data) {
-		//concatenate and hash input -> use as couchdb _id
-		var hashVal = (function(data) {
-			var conc = "";
-			for(var key in data) {
-				if(data.hasOwnProperty(key)) {
-					conc += data[key];
+		//if this submission is not an update then create new id as hash
+		if(!data._id) { 
+			//concatenate and hash input -> use as couchdb _id
+			var hashVal = (function(data) {
+				var conc = "";
+				for(var key in data) {
+					if(data.hasOwnProperty(key)) {
+						conc += data[key];
+					}
 				}
-			}
-			return Math.abs($hashService.hash(conc)).toString();
-		})(data);
-		data["_id"] = hashVal;
+				return Math.abs($hashService.hash(conc)).toString();
+			})(data);
+			data["_id"] = hashVal;
+		}
 		$pouchyModel.databaseContainer[db].addItem(data);
 	}
 	//UI delete data
@@ -1136,7 +1146,17 @@ angular.module("pouchy.cidLogic",[])
 			$scope.creativeChannel = doc;
 		});
 	}())
-	$scope.checkWID = function(value,intext) {
+	$scope.counter = function(camp,val) {
+		var counter = 0;
+		for(var i=0; i<$pouchyModelDatabase.database["cid_db"].length; i++) {
+			if($pouchyModelDatabase.database["cid_db"][i].doc[camp] === val) counter++;
+		}
+		counter++
+		var counterLength = counter.toString().length;
+		var wid = Array(6-counterLength).join("0") + counter.toString();
+		$scope.values.adid = wid;
+	}
+	/*$scope.checkWID = function(value,intext) {
 		var campaign;
 		(intext === "extern") ? campaign = "extcampaign" : campaign = "intcampaign";
 		var counter = 0;
@@ -1146,8 +1166,10 @@ angular.module("pouchy.cidLogic",[])
 		counter++
 		var counterLength = counter.toString().length;
 		var wid = Array(6-counterLength).join("0") + counter.toString();
-		$scope.values.adid = wid;
-	};
+		$scope.$apply(function() {
+			$scope.values.adid = wid
+		});
+	};*/
 	$scope.isActive = function(val) {
 		if(val === "Extern") {
 			$scope.values.intcampaign = "";
@@ -1162,7 +1184,7 @@ angular.module("pouchy.cidLogic",[])
 		if(val) $scope.addItem(data);
 	}
 	$scope.addItem = function(data) {
-		//concatenate and hash input -> use as couchdb _id
+		//concatenate and hash input -> use as couchdb ._id
 		var hashVal = (function(data) {
 			var conc = "";
 			for(var key in data) {
@@ -1174,6 +1196,7 @@ angular.module("pouchy.cidLogic",[])
 		})(data);
 		data["_id"] = hashVal;
 		$pouchyModel.databaseContainer["cid_db"].addItem(data);
+		$scope.hide();
 	}
 }])
 .factory("cidLogic",["DATALAYER","$pouchyModelDatabase","$msgBusService",function cidLogicFactory(DATALAYER,$pouchModelDatabase,$msgBusService) {
@@ -1251,8 +1274,11 @@ angular.module("pouchy.cidLogic",[])
 		restrict: "A",
 		scope: true,
 		controller: "cidCtrl",
-		link: function(scope,element,attr) {
-			console.log($pouchyModelDatabase.database);
+		require: "^^modalOnDemand",
+		link: function(scope,element,attr,ctrl) {
+			scope.hide = function() {
+				ctrl.modalHideCtrl();
+			}
 		}
 	}
 }])
@@ -1275,8 +1301,8 @@ angular.module("pouchy.cidLogic",[])
 			});
 		}
 	}
-}])
-.directive("widCheck",function widCheckDirective() {
+}]);
+/*.directive("widCheck",function widCheckDirective() {
 	return {
 		link: function(scope,elemt,attr) {
 			elemt.bind("change",function() {
@@ -1284,7 +1310,7 @@ angular.module("pouchy.cidLogic",[])
 			});
 		}
 	}
-})
+});*/
 //
 //###CID-Logic Module###END
 //

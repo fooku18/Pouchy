@@ -279,3 +279,7 @@ select {
 .cursor-pointer:hover {
 	cursor: pointer;
 }
+
+.main-borderless-input {
+	border: 0;
+}

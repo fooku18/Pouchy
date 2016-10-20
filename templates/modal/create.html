@@ -33,16 +33,14 @@
 			<div class="padding-bottom-5">
 				<span class="label label-default" ng-click="show()">Intern/Extern</span>
 			</div>
-			<select name="cIntext" ng-model="values.intext" class="form-control" ng-select="values.intext" ng-pattern="/.*/" required>
-				<option>Intern</option>
-				<option>Extern</option>
+			<select name="cIntext" ng-model="values.intext" class="form-control" ng-select="values.intext" ng-pattern="/.*/" required ng-options="v for v in ['Intern','Extern']">
 			</select>
 		</div>
 		<div class="col-md-12 col-sm-12 block form-group" ng-show="isActive(values.intext)" ng-class="{'has-error': userForm.cExtcampaign.$invalid && userForm.cExtcampaign.$touched, 'has-success': userForm.cExtcampaign.$valid}" >
 			<div class="padding-bottom-5">
 				<span class="label label-default">Externe Kampagne</span>
 			</div>
-			<select name="cExtcampaign" ng-model="values.extcampaign" class="form-control" ng-select="values.extcampaign" wid-check="extern" ng-required="isActive(values.intext)" ng-pattern="/.*/">
+			<select name="cExtcampaign" ng-model="values.extcampaign" class="form-control" ng-select="values.extcampaign" ng-change="counter('extcampaign',values.extcampaign)" <!--wid-check="extern"--> ng-required="isActive(values.intext)" ng-pattern="/.*/">
 				<option ng-repeat="i in extCampaigns">{{i.name}}</option>
 			</select>
 		</div>
@@ -58,7 +56,7 @@
 			<div class="padding-bottom-5">
 				<span class="label label-default">Interne Kampagne</span>
 			</div>
-			<select name="cIntcampaign" ng-model="values.intcampaign" class="form-control" ng-select="values.intcampaign" wid-check="intern" ng-required="!isActive(values.intext)" ng-pattern="/.*/">
+			<select name="cIntcampaign" ng-model="values.intcampaign" class="form-control" ng-select="values.intcampaign" ng-change="counter('intcampaign',values.intcampaign)" <!--wid-check="intern"--> ng-required="!isActive(values.intext)" ng-pattern="/.*/">
 				<option ng-repeat="i in intCampaigns">{{i.name}}</option>
 			</select>
 		</div>
