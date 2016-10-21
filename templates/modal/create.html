@@ -33,7 +33,7 @@
 			<div class="padding-bottom-5">
 				<span class="label label-default" ng-click="show()">Intern/Extern</span>
 			</div>
-			<select name="cIntext" ng-model="values.intext" class="form-control" ng-select="values.intext" ng-pattern="/.*/" required ng-options="v for v in ['Intern','Extern']">
+			<select name="cIntext" ng-change="intextChanger(values.intext)" ng-model="values.intext" class="form-control" ng-select="values.intext" ng-pattern="/.*/" required ng-options="v for v in ['Intern','Extern']">
 			</select>
 		</div>
 		<div class="col-md-12 col-sm-12 block form-group" ng-show="isActive(values.intext)" ng-class="{'has-error': userForm.cExtcampaign.$invalid && userForm.cExtcampaign.$touched, 'has-success': userForm.cExtcampaign.$valid}" >

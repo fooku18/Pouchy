@@ -1045,18 +1045,20 @@ angular.module("pouchy.model",[])
 		},function() {
 			console.log("Aborted");
 		});
-	}	
+	}
 }])
-//jqueryUI date picker 
+//bootstrapUI date picker 
 .directive("datepicker",function datepickerDirective() {
 	return {
 		restrict: "A",
 		link: function(scope,elem,attr) {
 			$(elem).datepicker({
-				dateFormat: "dd.mm.yy",
-				dayNamesMin: ["So","Mo","Di","Mi","Do","Fr","Sa"],
-				monthNames: [ "Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember" ],
-				autoSize: true
+				format: "dd.mm.yyyy",
+				calendarWeeks: true,
+				orientation: "bottom left",
+				autoclose: true,
+				language: "de",
+				todayHighlight: true
 			});
 		}
 	}
@@ -1096,7 +1098,7 @@ angular.module("pouchy.model",[])
 //###CID-Logic Module###START
 //
 angular.module("pouchy.cidLogic",[])
-.controller("cidCtrl",["$scope","$msgBusService","$pouchyModel","$modalService","$pouchyWorker","$pouchyModelDatabase","$hashService",function cidController($scope,$msgBusService,$pouchyModel,$modalService,$pouchyWorker,$pouchyModelDatabase,$hashService) {
+.controller("cidCtrl",["$scope","$msgBusService","$pouchyModel","$modalService","$pouchyWorker","$pouchyModelDatabase","$hashService","$pouchyCIDLogic",function cidController($scope,$msgBusService,$pouchyModel,$modalService,$pouchyWorker,$pouchyModelDatabase,$hashService,$pouchyCIDLogic) {
 	$scope.intelliAdCampaigns = [];
 	$scope.extCampaigns = [];
 	$scope.intCampaigns = [];
@@ -1135,6 +1137,7 @@ angular.module("pouchy.cidLogic",[])
 			$scope.intCampaigns = doc[0];
 			$scope.extCampaigns = doc[1];
 		});
+		//channel if filling
 		fn =	"function(doc) {" +
 					"var channels = [];" +
 					"for(var i=0;i<doc.length;i++) {" +
@@ -1146,6 +1149,8 @@ angular.module("pouchy.cidLogic",[])
 			$scope.creativeChannel = doc;
 		});
 	}())
+	//this function serves as an wid checker and increases the number in case that 
+	//some other dataset already exists with given number
 	$scope.counter = function(camp,val) {
 		var counter = 0;
 		for(var i=0; i<$pouchyModelDatabase.database["cid_db"].length; i++) {
@@ -1170,6 +1175,7 @@ angular.module("pouchy.cidLogic",[])
 			$scope.values.adid = wid
 		});
 	};*/
+	//changes the cid UI in case of external or internal campaign
 	$scope.isActive = function(val) {
 		if(val === "Extern") {
 			$scope.values.intcampaign = "";
@@ -1179,9 +1185,9 @@ angular.module("pouchy.cidLogic",[])
 			$scope.values.extintellicampaign = "";
 			return false;
 		}
-	}
+	}	
 	$scope.validation = function(val,data) {
-		if(val) $scope.addItem(data);
+		if(val) $pouchyCIDLogic.createCID(data,$scope.intelliAdCampaigns,$scope.extCampaigns,$scope.intCampaigns,$scope.creativeChannel);//$scope.addItem(data);
 	}
 	$scope.addItem = function(data) {
 		//concatenate and hash input -> use as couchdb ._id
@@ -1198,10 +1204,20 @@ angular.module("pouchy.cidLogic",[])
 		$pouchyModel.databaseContainer["cid_db"].addItem(data);
 		$scope.hide();
 	}
+	$scope.intextChanger = function(data) {
+		if(data === "Intern") {
+			$scope.values.extcampaign = "";
+			$scope.values.extintellicampaign = "";
+		} else {
+			$scope.values.intcampaign = "";
+		}
+	}
 }])
-.factory("cidLogic",["DATALAYER","$pouchyModelDatabase","$msgBusService",function cidLogicFactory(DATALAYER,$pouchModelDatabase,$msgBusService) {
-	function createCID() {
-		/*
+//this factory serves as the cid generator logic. the services receives all necessary information
+//about the data input and creates a unique cid and if desired an intelliad link wrapper.
+.factory("$pouchyCIDLogic",["DATALAYER","$pouchyModelDatabase","$msgBusService",function pouchyCIDLogicFactory(DATALAYER,$pouchModelDatabase,$msgBusService) {
+	function createCID(data,intelliAdCampaigns,extCampaigns,intCampaigns,creativeChannel) {
+	/*
 	//CID generating logic
 	$scope.doCIDLogic = function(data) {
 		if(typeof(data.extcampaign) !== "undefined" && data.extcampaign !== "") {

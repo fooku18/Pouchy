@@ -282,4 +282,15 @@ select {
 
 .main-borderless-input {
 	border: 0;
+	background-image: none !important;
+	width: 100% !important;
+}
+
+tr:hover > td > input,
+tr:hover > td > select {
+	background-color: rgb(245,245,245);
+}
+
+.main-center {
+	text-align: center;
 }

@@ -45,13 +45,18 @@
 	<div class="row">
 		<div class="col-md-12 col-sm-12">
 			<table class="table table-responsive table-hover">
-				<!--<th>ID</th>--><th>Titel</th><th>Stamm-Url</th><th>Zusatz-Url</th><th style="text-align: center;">Löschen</th>
-				<tr ng-repeat="(key,value) in items track by $index">
-					<!--<td>{{value.doc._id}}</td>-->
-					<td>{{value.doc.name}}</td>
-					<td>{{value.doc.root}}</td>
-					<td>{{value.doc.ext}}</td>
+				<th class="col-sm-2">Titel</th>
+				<th class="col-sm-4">Stamm-Url</th>
+				<th class="col-sm-4">Zusatz-Url</th>
+				<th class="col-sm-1 main-center">Löschen</th>
+				<tr ng-repeat="value in items track by $index">
+					<td><input type="text" class="main-borderless-input" ng-value="value.doc.name" ng-model="valueN.doc.name" ng-init="valueN.doc.name=value.doc.name" /></td>
+					<td><input type="text" class="main-borderless-input" ng-value="value.doc.root" ng-model="valueN.doc.root" ng-init="valueN.doc.root=value.doc.root" /></td>
+					<td><input type="text" class="main-borderless-input" ng-value="value.doc.ext" ng-model="valueN.doc.ext" ng-init="valueN.doc.ext=value.doc.ext" /></td>
 					<td align="center">
+						<button ng-click="validation(true,{_id:value.doc._id,_rev:value.doc._rev,name:valueN.doc.name,root:valueN.doc.root,ext:valueN.doc.ext})" type="button" class="btn btn-default" style="padding: 1px 1px;">
+							<span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
+						</button>
 						<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'ItelliAd-Kampagne: &quot;' + value.doc.name + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
 							<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
 						</button>

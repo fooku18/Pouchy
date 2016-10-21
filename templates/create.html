@@ -19,14 +19,18 @@
 				&nbsp;
 				<table class="table table-responsive table-hover">
 					<tr>
-						<th>Ziel-Url</th><th>Werbemittel</th><th>Typ</th><th>CID</th><th></th>
+						<th class="col-sm-4">Ziel-Url</th>
+						<th class="col-sm-1">Werbemittel</th>
+						<th class="col-sm-1">Typ</th>
+						<th class="col-sm-4">CID</th>
+						<th class="col-sm-2 main-center">Aktionen</th>
 					</tr>
 					<tr ng-repeat="item in searchitems = (items | pages:searchKey:currentPage:showRows:showFilter.id) track by $index">
 						<td>{{item.doc.targeturl}}</td>
 						<td>{{item.doc.ad}}</td>
 						<td>{{item.doc.intext}}</td>
 						<td>{{item.doc.cid}}</td>
-						<td align="center" style="width:150px">
+						<td align="center">
 							<div class="btn btn-default relative" style="padding: 1px 1px;" title="Quick-Info" clipboard cbvalue="{doc:item.doc,id:$index}">
 								<span class="glyphicon glyphicon-saved" aria-hidden="true"></span>
 							</div>
