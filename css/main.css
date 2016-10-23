@@ -286,11 +286,36 @@ select {
 	width: 100% !important;
 }
 
-tr:hover > td > input,
-tr:hover > td > select {
+.main-table-tr:hover input,
+.main-table-tr:hover select {
 	background-color: rgb(245,245,245);
 }
 
 .main-center {
 	text-align: center;
+}
+
+.main-table {
+	display: inline-block !important;
+	width: 100%;
+}
+
+.main-table-th {
+	display: inline-block !important;
+	width: 100%;
+	padding: 8px 0;
+	font-weight: bold;
+	border-top: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+}
+
+.main-table-tr {
+	display: inline-block !important;
+	width: 100%;
+	padding: 8px 0;
+	border-bottom: 1px solid rgba(204,204,204,.7);
+}
+
+.main-table-tr:hover {
+	background-color: rgb(245,245,245);
 }

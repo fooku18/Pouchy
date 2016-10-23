@@ -988,13 +988,15 @@ angular.module("pouchy.model",[])
 	var db = $attrs.db;
 	//initial on scope creation in case model already exists
 	(function() {
-		$scope.items = $pouchyModelDatabase.database[db];
+		//$scope.items = $pouchyModelDatabase.database[db];
+		$scope.items = angular.copy($pouchyModelDatabase.database[db]);
 		console.log($pouchyModelDatabase.database[db]); // <-----------------------------------DELETE
-	}());
+	})();
 	//update scope if model changes due UI-input
 	$msgBusService.get(db + ":change",$scope,function(event,data) {
 		$scope.$apply(function() {
-			$scope.items = data;
+			$scope.items = angular.copy(data);
+			//$scope.items = data;
 		});
 	});
 	//UI input data need to be validated before pouch/couch is updated. Validation is defined on the relevant userforms
