@@ -258,7 +258,7 @@ angular.module("pouchy.modal",[])
 //###Clipboard Module###START
 //
 angular.module("pouchy.clipboard",[])
-.controller("clipboardController",["$scope","$timeout",function clipboardController($scope,$timeout) {
+/*.controller("clipboardController",["$scope","$timeout",function clipboardController($scope,$timeout) {
 	var urls = ["targeturl","campaignID","FQ","cid"];
 	var urlsTranslation = ["Ziel-URL","Kampagnen-Nummer","Vollqualifizierter Link","Kampagnen-ID (CID)"];
 	var clip = $(".specialInput")[$scope.cbvalue.id];
@@ -341,6 +341,7 @@ angular.module("pouchy.clipboard",[])
 //
 //###Clipboard Module###END
 //
+*/
 
 //
 //###Pagination Module###START
@@ -481,6 +482,7 @@ filter("included",function includedFilter() {
 			}
 			return fitArray.length;
 		} else {
+			if(input === undefined) return 0;
 			return input.length;
 		}
 	}
@@ -1036,6 +1038,13 @@ angular.module("pouchy.model",[])
 				return Math.abs($hashService.hash(conc)).toString();
 			})(data);
 			data["_id"] = hashVal;
+		//extra behaviour due campaign data changes - if several properties get changed the 
+		//main cid pool of datasets needs to get updated to. these datasets also need to be 
+		//flagged as not up to date relating to SAINT classification
+		} else {
+			if(db = "campaigns_db") {
+				
+			}
 		}
 		$pouchyModel.databaseContainer[db].addItem(data);
 	}
@@ -1122,11 +1131,19 @@ angular.module("pouchy.model",[])
 					$(element).on("contextmenu", function(e) {
 						e.preventDefault();
 						e.stopPropagation();
-						for(var i=0;i<e.target.form.length;i++) {
-							if(e.target.form[i].tagName === "INPUT" || e.target.form[i].tagName === "SELECT") {
-								scope.values[e.target.form[i].name] = e.target.form[i].value;
+						var node = e.target;
+						while(node.className.indexOf("main-table-tr") === -1) {
+							node = node.parentElement;
+						}
+						//console.log(e);
+						var data = $(node).data("context-info");
+						var newData = {};
+						for(var key in data) {
+							if(key !== "_rev" && key !== "_id") {
+								newData[key] = data[key];
 							}
 						}
+						scope.values = newData;
 						scope.$apply(function() {
 							element.addClass("context-menu-show");
 							$("#contextMenu").css({
@@ -1137,7 +1154,6 @@ angular.module("pouchy.model",[])
 					});
 					$(document).click(function(e) {
 						var target = e.target;
-						console.log(target.className);
 						if(target.className.indexOf("context-menu-li-content") === -1) {
 							element.removeClass("context-menu-show");
 						}
@@ -1194,7 +1210,7 @@ angular.module("pouchy.cidLogic",[])
 			$scope.intCampaigns = doc[0];
 			$scope.extCampaigns = doc[1];
 		});
-		//channel if filling
+		//channel ID filling
 		fn =	"function(doc) {" +
 					"var channels = [];" +
 					"for(var i=0;i<doc.length;i++) {" +

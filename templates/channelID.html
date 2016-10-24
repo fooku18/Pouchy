@@ -33,23 +33,29 @@
 	</form>
 	<div class="row">
 		<div class="col-md-12 col-sm-12">
-			<table class="table table-responsive table-hover">
-				<th class="col-sm-1">Kanal-ID</th>
-				<th class="col-sm-10">Kanal</th>
-				<th class="col-sm-1 main-center">Löschen</th>
-				<tr ng-repeat="value in items track by $index">
-					<td><input type="text" class="main-borderless-input" ng-value="value.doc.channelID" ng-model="valueN.doc.channelID" ng-init="valueN.doc.channelID=value.doc.channelID" /></td>
-					<td><input type="text" class="main-borderless-input" ng-value="value.doc.channel" ng-model="valueN.doc.channel" ng-init="valueN.doc.channel=value.doc.channel" /></td>
-					<td align="center">
-						<button ng-click="validation(true,{_id:value.doc._id,_rev:value.doc._rev,channelID:valueN.doc.channelID,channel:valueN.doc.channel})" type="button" class="btn btn-default" style="padding: 1px 1px;">
-							<span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
-						</button>
-						<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'Kanal: &quot;' + value.doc.channel + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
-							<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-						</button>
-					</td>
-				</tr>
-			</table>
+			<div class="main-table" context-menu>
+				<div class="main-table-th">
+					<div class="col-sm-1">Kanal-ID</div>
+					<div class="col-sm-10">Kanal</div>
+					<div class="col-sm-1 main-center">Löschen</div>
+				</div>
+				<div class="main-table-tr-wrapper">
+					<div class="main-table-tr" ng-repeat="value in items track by $index" data-context-info="{{value.doc}}">
+						<form name="userFormChange_{{$index}}" ng-submit="validation(true,{_id:value.doc._id,_rev:value.doc._rev,channelID:value.doc.channelID,channel:value.doc.channel})" novalidate>
+							<div class="col-sm-1"><input type="text" class="main-borderless-input" ng-model="value.doc.channelID" ng-minlength="1" ng-maxlength="1" required /></div>
+							<div class="col-sm-10"><input type="text" class="main-borderless-input" ng-model="value.doc.channel" required /></div>
+							<div class="col-sm-1 main-center">
+								<button ng-disabled="!userFormChange_{{$index}}.$valid" type="button" class="btn btn-default" style="padding: 1px 1px;">
+									<span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
+								</button>
+								<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'Kanal: &quot;' + value.doc.channel + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
+									<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
