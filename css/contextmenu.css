@@ -1,0 +1,47 @@
+.context-menu-framer {
+	list-style: none;
+	min-width: 200px;
+	padding: 5px 0;
+	margin: 2px 0 0;
+	display: none;
+	border: 1px solid rgba(0,0,0,.2);
+	border-radius: 6px;
+	background-color: #fff;
+	top:0;
+	left:0;
+	z-index: 100;
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.context-menu-framer > .context-menu-li {
+	line-height: 22px;
+}
+
+.context-menu-framer > .context-menu-li:hover {
+	background-color: rgb(245,245,245);
+	cursor: pointer;
+}
+
+.context-menu-framer > .context-menu-li > .context-menu-li-content {
+	padding: 3px 20px;
+	clear: both;
+	color: #333333;
+	white-space: nowrap;
+	display: block;
+	text-decoration: none;
+}
+
+.context-menu-show .context-menu-framer {
+	position: fixed;
+	display: inline-block !important;
+}
+
+.context-menu-borderless-input {
+	border: 0;
+	background-image: none !important;
+}
+
+.context-menu-framer > .context-menu-li:hover .context-menu-borderless-input {
+	background-color: rgb(245,245,245);
+	cursor: pointer;
+}

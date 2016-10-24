@@ -78,7 +78,7 @@
 	</form>
 	<div class="row">
 		<div class="col-md-12 col-sm-12">
-			<div class="main-table">
+			<div class="main-table" context-menu>
 				<div class="main-table-th">
 					<div class="col-sm-3">Titel</div>
 					<div class="col-sm-2">Typ</div>
@@ -90,11 +90,11 @@
 				<div class="main-table-tr-wrapper">
 					<div class="main-table-tr" ng-repeat="value in items track by $index">
 						<form name="userFormChange_{{$index}}" ng-submit="validation(true,{_id:value.doc._id,_rev:value.doc._rev,name:value.doc.name,type:value.doc.type,intext:value.doc.intext,start:value.doc.start,end:value.doc.end})" novalidate>
-							<div class="col-sm-3"><input type="text" class="main-borderless-input" ng-model="value.doc.name" required /></div>
-							<div class="col-sm-2"><select class="main-borderless-input" ng-model="value.doc.type" ng-options="v for v in ['Conversion','Image']" ng-minlength="1"></select></div>
-							<div class="col-sm-2"><select class="main-borderless-input" ng-model="value.doc.intext" ng-options="v for v in ['Intern','Extern']" ng-minlength="1"></select></div>
-							<div class="col-sm-2"><input type="text" class="main-borderless-input" ng-model="value.doc.start" ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" /></div>
-							<div class="col-sm-2"><input type="text" class="main-borderless-input" ng-model="value.doc.end" ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" /></div>
+							<div class="col-sm-3"><input name="Titel" type="text" class="main-borderless-input" ng-model="value.doc.name" required /></div>
+							<div class="col-sm-2"><select name="Typ" class="main-borderless-input" ng-model="value.doc.type" ng-options="v for v in ['Conversion','Image']" ng-minlength="1"></select></div>
+							<div class="col-sm-2"><select name="Intern/Extern" class="main-borderless-input" ng-model="value.doc.intext" ng-options="v for v in ['Intern','Extern']" ng-minlength="1"></select></div>
+							<div class="col-sm-2"><input name="Start" type="text" class="main-borderless-input" ng-model="value.doc.start" ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" /></div>
+							<div class="col-sm-2"><input name="Ende" type="text" class="main-borderless-input" ng-model="value.doc.end" ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" /></div>
 							<div class="col-sm-1 main-center">
 								<button type="submit" class="btn btn-default" ng-disabled="!userFormChange_{{$index}}.$valid" style="padding: 1px 1px;">
 									<span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>

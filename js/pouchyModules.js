@@ -1091,6 +1091,61 @@ angular.module("pouchy.model",[])
 			},true);
 	   }
 	}
+})
+.directive("contextMenu",function($compile) {
+	return {
+		restrict: "A",
+		controller: function($scope) {
+			$scope.values = {};
+			$scope.copyValue = function (value) {
+				var inp = $("input[data-id='" + value + "']");
+				inp.select();
+				try {
+					document.execCommand("copy");
+				}catch(err) {
+					console.log("not supported");
+				}
+			}
+		},
+		compile: function(tElement,tAttribute) {
+			var html = 	"<li class='context-menu-li' ng-repeat='(key,value) in values'>" +
+							"<a class='context-menu-li-content'>" +
+								"{{key}}: " + 
+								"<input data-id='{{key}}' class='context-menu-borderless-input' ng-value='value' ng-click='copyValue(key)' />" +
+							"</a>" +
+						"<li>";
+			var tmp = 	"<ul id='contextMenu' class='context-menu-framer'>" + html + "</ul>";
+			tElement.append(tmp);
+			
+			return {
+				post: function(scope,element,attr) {
+					$(element).on("contextmenu", function(e) {
+						e.preventDefault();
+						e.stopPropagation();
+						for(var i=0;i<e.target.form.length;i++) {
+							if(e.target.form[i].tagName === "INPUT" || e.target.form[i].tagName === "SELECT") {
+								scope.values[e.target.form[i].name] = e.target.form[i].value;
+							}
+						}
+						scope.$apply(function() {
+							element.addClass("context-menu-show");
+							$("#contextMenu").css({
+								top: e.clientY + "px",
+								left: e.clientX + "px"
+							});
+						});
+					});
+					$(document).click(function(e) {
+						var target = e.target;
+						console.log(target.className);
+						if(target.className.indexOf("context-menu-li-content") === -1) {
+							element.removeClass("context-menu-show");
+						}
+					});
+				}
+			}
+		}
+	}
 });
 //
 //###PouchyModel Module###END
@@ -1163,20 +1218,6 @@ angular.module("pouchy.cidLogic",[])
 		var wid = Array(6-counterLength).join("0") + counter.toString();
 		$scope.values.adid = wid;
 	}
-	/*$scope.checkWID = function(value,intext) {
-		var campaign;
-		(intext === "extern") ? campaign = "extcampaign" : campaign = "intcampaign";
-		var counter = 0;
-		for(var i=0; i<$pouchyModelDatabase.database["cid_db"].length; i++) {
-			if($pouchyModelDatabase.database["cid_db"][i].doc[campaign] === value) counter++;
-		}
-		counter++
-		var counterLength = counter.toString().length;
-		var wid = Array(6-counterLength).join("0") + counter.toString();
-		$scope.$apply(function() {
-			$scope.values.adid = wid
-		});
-	};*/
 	//changes the cid UI in case of external or internal campaign
 	$scope.isActive = function(val) {
 		if(val === "Extern") {
