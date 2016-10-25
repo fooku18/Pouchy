@@ -18,19 +18,45 @@
 			<pagination-parent>
 				<div class="main-table" context-menu>
 					<div class="main-table-th">
-						<div class="col-sm-4">Ziel-Url</div>
-						<div class="col-sm-1">Werbemittel</div>
-						<div class="col-sm-1">Typ</div>
-						<div class="col-sm-4">CID</div>
-						<div class="col-sm-2 main-center">Aktionen</div>
+						<div class="col-sm-1">Status</div>
+						<div class="col-sm-3 cursor-pointer" ng-click="changeSortType('targeturl')">
+							Ziel-Url
+							<span class="padding-left-5">
+								<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'targeturl'">
+								</i>
+							</span>
+						</div>
+						<div class="col-sm-2 cursor-pointer" ng-click="changeSortType('ad')">
+							Werbemittel
+							<span class="padding-left-5">
+								<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'ad'">
+								</i>
+							</span>
+						</div>
+						<div class="col-sm-1 cursor-pointer" ng-click="changeSortType('intext')">
+							Typ
+							<span class="padding-left-5">
+								<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'intext'">
+								</i>
+							</span>
+						</div>
+						<div class="col-sm-4 cursor-pointer" ng-click="changeSortType('cid')">
+							CID
+							<span class="padding-left-5">
+								<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'cid'">
+								</i>
+							</span>
+						</div>
+						<div class="col-sm-1 main-center">Aktionen</div>
 					</div>
 					<div class="main-table-tr-wrapper">
-						<div class="main-table-tr" ng-repeat="item in searchitems = (items | pages:searchKey:currentPage:showRows:showFilter.id) track by $index" data-context-info="{{item.doc}}">
-							<div class="col-sm-4">{{item.doc.targeturl}}</div>
-							<div class="col-sm-1">{{item.doc.ad}}</div>
+						<div class="main-table-tr" ng-repeat="item in searchitems = (items | pages:searchKey:currentPage:showRows:showFilter.id | orderBy:doc.creationdate:true) track by $index" data-context-info="{{item.doc}}">
+							<div class="col-sm-1" on-off-switch saintstatus="item.doc.saintstatus"></div>
+							<div class="col-sm-3">{{item.doc.targeturl}}</div>
+							<div class="col-sm-2">{{item.doc.ad}}</div>
 							<div class="col-sm-1">{{item.doc.intext}}</div>
 							<div class="col-sm-4">{{item.doc.cid}}</div>
-							<div class="col-sm-2 main-center">
+							<div class="col-sm-1 main-center">
 								<button ng-click="showDetails(item.doc)" type="button" class="btn btn-default" style="padding: 1px 1px;" title="Datensatz anzeigen">
 									<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
 								</button>

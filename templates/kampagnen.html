@@ -1,5 +1,5 @@
 <div ng-controller="mainCtrl" db="campaigns_db">
-	<form name="userForm" ng-submit="validation(userForm.$valid,{'name':c.Name,'type':c.Type,'intext':c.IntExt,'start':c.date.Start,'end':c.date.End})" novalidate>
+	<form name="userForm" ng-submit="validation(userForm,{'name':c.Name,'type':c.Type,'intext':c.IntExt,'start':c.date.Start,'end':c.date.End})" autocomplete="off" novalidate>
 		<div class="row padding-top-10 padding-bottom-10">
 			<div class="col-md-3 col-sm-3 form-group relative" ng-class="{'has-error': userForm.cName.$invalid && !userForm.cName.$pristine }">
 				<div class="padding-bottom-5">
@@ -80,23 +80,53 @@
 		<div class="col-md-12 col-sm-12">
 			<div class="main-table" context-menu>
 				<div class="main-table-th">
-					<div class="col-sm-3">Titel</div>
-					<div class="col-sm-2">Typ</div>
-					<div class="col-sm-2">Intern/Extern</div>
-					<div class="col-sm-2">Start</div>
-					<div class="col-sm-2">Ende</div>
+					<div class="col-sm-3 cursor-pointer" ng-click="changeSortType('name')">
+						Titel
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'name'">
+							</i>
+						</span>
+					</div>
+					<div class="col-sm-2 cursor-pointer" ng-click="changeSortType('type')">
+						Typ
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'type'">
+							</i>
+						</span>
+					</div>
+					<div class="col-sm-2 cursor-pointer" ng-click="changeSortType('intext')">
+						Intern/Extern
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'intext'">
+							</i>
+						</span>
+					</div>
+					<div class="col-sm-2 cursor-pointer" ng-click="changeSortType('start')">
+						Start
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'start'">
+							</i>
+						</span>
+					</div>
+					<div class="col-sm-2 cursor-pointer" ng-click="changeSortType('end')">
+						Ende
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'end'">
+							</i>
+						</span>
+					</div>
 					<div class="col-sm-1 main-center">Aktionen</div>
 				</div>
 				<div class="main-table-tr-wrapper">
-					<div class="main-table-tr" ng-repeat="value in items track by $index" data-context-info="{{value.doc}}">
-						<form name="userFormChange_{{$index}}" ng-submit="validation(true,{_id:value.doc._id,_rev:value.doc._rev,name:value.doc.name,type:value.doc.type,intext:value.doc.intext,start:value.doc.start,end:value.doc.end})" novalidate>
+					<div class="main-table-tr" ng-repeat="value in items | orderBy:sortType:sortDescending track by $index" data-context-info="{{value.doc}}">
+						<form name="userFormChange" ng-submit="validation(this.userFormChange,{_id:value.doc._id,_rev:value.doc._rev,name:value.doc.name,type:value.doc.type,intext:value.doc.intext,start:value.doc.start,end:value.doc.end})" novalidate>
 							<div class="col-sm-3"><input name="Titel" type="text" class="main-borderless-input" ng-model="value.doc.name" required /></div>
 							<div class="col-sm-2"><select name="Typ" class="main-borderless-input" ng-model="value.doc.type" ng-options="v for v in ['Conversion','Image']" ng-minlength="1"></select></div>
 							<div class="col-sm-2"><select name="Intern/Extern" class="main-borderless-input" ng-model="value.doc.intext" ng-options="v for v in ['Intern','Extern']" ng-minlength="1"></select></div>
 							<div class="col-sm-2"><input name="Start" type="text" class="main-borderless-input" ng-model="value.doc.start" ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" /></div>
 							<div class="col-sm-2"><input name="Ende" type="text" class="main-borderless-input" ng-model="value.doc.end" ng-pattern="/^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[012])\.\d{4}$/" /></div>
 							<div class="col-sm-1 main-center">
-								<button type="submit" class="btn btn-default" ng-disabled="!userFormChange_{{$index}}.$valid" style="padding: 1px 1px;">
+								<button type="submit" class="btn btn-default" ng-disabled="!userFormChange.$valid" style="padding: 1px 1px;">
 									<span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
 								</button>
 								<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'Kampagne: &quot;' + value.doc.name + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">

@@ -1,16 +1,51 @@
+.context-menu-show .context-menu-wrapper {
+	position: fixed;
+	display: inline-block !important;
+	z-index: 100;
+}
+
+.context-menu-wrapper {
+	display: none;
+}
+
 .context-menu-framer {
 	list-style: none;
+	position: relative;
 	min-width: 200px;
 	padding: 5px 0;
 	margin: 2px 0 0;
-	display: none;
 	border: 1px solid rgba(0,0,0,.2);
 	border-radius: 6px;
 	background-color: #fff;
 	top:0;
 	left:0;
-	z-index: 100;
 	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.context-menu-framer:before,
+.context-menu-framer:after {
+	position: absolute;
+	bottom: 100%;
+	left: 50%;
+	border: solid transparent;
+	height: 0;
+	width: 0;
+	content: "";
+	pointer-events: none;
+}
+
+.context-menu-framer:after {
+	border-color: rgba(0,0,0,0);
+	border-bottom-color: #fff;
+	border-width: 20px;
+	margin-left: -20px;
+}
+
+.context-menu-framer:before {
+	border-color: rgba(0,0,0,0);
+	border-bottom-color: rgba(0,0,0,.2);
+	border-width: 22px;
+	margin-left: -22px;
 }
 
 .context-menu-framer > .context-menu-li {
@@ -29,11 +64,6 @@
 	white-space: nowrap;
 	display: block;
 	text-decoration: none;
-}
-
-.context-menu-show .context-menu-framer {
-	position: fixed;
-	display: inline-block !important;
 }
 
 .context-menu-borderless-input {

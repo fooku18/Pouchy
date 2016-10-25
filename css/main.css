@@ -284,6 +284,7 @@ select {
 	border: 0;
 	background-image: none !important;
 	width: 100% !important;
+	cursor: default;
 }
 
 .main-table-tr:hover input,
@@ -318,4 +319,19 @@ select {
 
 .main-table-tr:hover {
 	background-color: rgb(245,245,245);
+}
+
+.main-sort-arrow {
+	border: solid #000;
+	display: inline-block;
+	padding: .2em;
+	transform: rotate(45deg);
+}
+
+.main-sort-arrow-up {
+	border-width: .2em 0 0 .2em;
+}
+
+.main-sort-arrow-down {
+	border-width: 0 .2em .2em 0;
 }
