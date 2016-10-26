@@ -54,12 +54,9 @@ angular.module("pouchy.navigation",[])
 		routes: routes
 	}
 }])
-.controller("naviCtrl",["$scope","$location","$rootScope",function naviController($scope,$location,$rootScope) {
+.controller("naviCtrl",["$scope","$location",function naviController($scope,$location) {
 	$scope.isActive = function(viewLocation) {
 		return viewLocation === $location.path();
-	}
-	$scope.setTitle = function(title) {
-		$rootScope.$broadcast("$location:change",title);
 	}
 }])
 .directive("navi",["routeNavi",function naviDirective(routeNavi) {
@@ -72,19 +69,18 @@ angular.module("pouchy.navigation",[])
 		}
 	}
 }])
-.directive("sitetitle",["routeNavi","$location","$pouchDB",function sitetitleDirective(routeNavi,$location,$pouchDB) {
+.directive("sitetitle",["routeNavi","$location",function sitetitleDirective(routeNavi,$location) {
 	return {
 		restrict: "E",
 		template: "<div class='title'><h1>{{title}}</div></h1></div>",
 		replace: true,
-		controller: function($scope,$rootScope) {
-			for(var i=0; i<=routeNavi.routes.length-1;i++) {
-				if(routeNavi.routes[i].path === $location.path()) $scope.title = routeNavi.routes[i].name;
-			}
-			$rootScope.$on("$location:change", function(event,data) {
-				$scope.title = data;
+		controller: ["$scope",function($scope) {
+			$scope.$on("$locationChangeSuccess",function(e) {
+				for(var i=0; i<=routeNavi.routes.length-1;i++) {
+					if(routeNavi.routes[i].path === $location.path()) $scope.title = routeNavi.routes[i].name;
+				}
 			});
-		}
+		}]
 	}
 }]);
 //
@@ -239,14 +235,6 @@ angular.module("pouchy.modal",[])
 					},0);
 				}
 			});
-			/*scope.$on('$includeContentLoaded', function () {
-				scope.modalShow = true;
-				if(document.getElementById("btn-focus-on")) {
-					$window.setTimeout(function() {
-						document.getElementById("btn-focus-on").focus();
-					},0);
-				}
-			});*/
 		}
 	}
 }]);
@@ -890,6 +878,17 @@ angular.module("pouchy.model",[])
 	this.dbCount = 0;
 	this.syncHandlerCount = [];
 	this.databaseContainer = {};
+	this.query = function(dbase,data) {
+		var defer = $q.defer();
+		this.databaseContainer[dbase].db.query(data).then(function(doc) {
+			console.log("RESOLVE");
+			defer.resolve(doc);
+		}, function() {
+			console.log("REJECT");
+			defer.reject();
+		});
+		return defer.promise;
+	}
 	//the service catches all databases and sync them
 	this.startSyncing = function() {
 		var remote = DATALAYER.databaseConfig.remoteUrl || "";
@@ -939,10 +938,8 @@ angular.module("pouchy.model",[])
 		function addItem(data) {
 			var defer = $q.defer();			
 			db.put(data).then(function() {
-				console.log("resolved");
 				defer.resolve(data);
 			}, function() {
-				console.log("rejected");
 				defer.reject();
 			});
 			return defer.promise;			
@@ -985,7 +982,7 @@ angular.module("pouchy.model",[])
 }])
 //mainCtrl is initilized on every new tab - this is to prevent too much scope overhead for non relevant data as 
 //all database data is present in the background service
-.controller("mainCtrl",["$scope","$pouchyWorker","$hashService","$msgBusService","$attrs","$modalService","$pouchyModel","$pouchyModelDatabase","$filter",function mainController($scope,$pouchyWorker,$hashService,$msgBusService,$attrs,$modalService,$pouchyModel,$pouchyModelDatabase,$filter) {
+.controller("mainCtrl",["$scope","$pouchyWorker","$hashService","$msgBusService","$attrs","$modalService","$pouchyModel","$pouchyModelDatabase","$filter","$pouchyDesignViews",function mainController($scope,$pouchyWorker,$hashService,$msgBusService,$attrs,$modalService,$pouchyModel,$pouchyModelDatabase,$filter,$pouchyDesignViews) {
 	//fetch database name from template attribute - this is important to seperate the data from the model service
 	var db = $attrs.db;
 	$scope.changeSortType = function(val) {
@@ -1013,7 +1010,7 @@ angular.module("pouchy.model",[])
 	//UI input data need to be validated before pouch/couch is updated. Validation is defined on the relevant userforms
 	$scope.validation = function(val,data) {
 		if(val.$valid) {
-			$scope.addItem(data);
+			$scope.addItem(val,data);
 			$modalService.open({template:"success",barColor:"green"}).
 			then(function() {
 				console.log("resolved");
@@ -1035,7 +1032,7 @@ angular.module("pouchy.model",[])
 		}
 	}
 	//if validation succeeds UI data is beeing added
-	$scope.addItem = function(data) {
+	$scope.addItem = function(val,data) {
 		//if this submission is not an update then create new id as hash
 		if(!data._id) {
 			//concatenate and hash input -> use as couchdb _id
@@ -1060,12 +1057,14 @@ angular.module("pouchy.model",[])
 			//main cid pool of datasets needs to get updated too. these datasets also need to be 
 			//flagged as not up to date relating to SAINT classification
 			if(db = "campaigns_db") {
-				
+				var idx = $pouchyDesignViews.design("campaign_id");
+				console.log(idx);
 			}
 		}
 		//add creation date do dataset - this is handy for sorting issues
 		data["creationdate"] = new Date().toISOString();
-		$pouchyModel.databaseContainer[db].addItem(data);
+		//$pouchyModel.databaseContainer[db].addItem(data);
+		console.log(data);
 	}
 	//UI delete data
 	$scope.deleteItem = function(doc) {
@@ -1076,7 +1075,53 @@ angular.module("pouchy.model",[])
 			console.log("Aborted");
 		});
 	}
+	//Call the cid modal window for creating new cid or updating existing one
+	$scope.cidModal = function(data) {
+		//deep copy of values as we dont want to pass the reference
+		var copyData = (!data) ? data : angular.copy(data);
+		//send data to cidModal window for creation/update
+		$modalService.open({template:"create",barColor:"white",data:copyData}).
+		then(function() {
+			console.log("resolved");
+		},function() {
+			console.log("rejected");
+		});
+	}
 }])
+.service("$pouchyDesignViews",["$pouchyModel",function($pouchyModel) {
+	function createDesignView(indexName) {
+		var idx = "index_" + indexName;
+		var mapStr = "function(doc) {emit(doc." + indexName + ")}";
+		var ddoc = {};
+		ddoc._id = "_design/" + idx;
+		ddoc.views = {};
+		ddoc.views[idx] = {};
+		ddoc.views[idx].map = mapStr;
+		
+		$pouchyModel.databaseContainer["cid_db"].addItem(ddoc).then(function() {
+			return $pouchyModel.query("cid_db",idx);
+		}).then(function() {
+			console.log("_designView created");
+		});
+		
+		return idx
+	}
+	
+	return {
+		design: createDesignView
+	}
+}])
+//this filter removes the _design views from the view representation in UI
+//views are couch/pouch'es way to index datasets and query secondary indexes
+.filter("removeDesigns",function() {
+	return function(data) {
+		var newSet = [];
+		angular.forEach(data,function(val,key) {
+			if((val.id).substr(0,7) !== "_design") newSet.push(val);
+		});
+		return newSet;
+	}
+})
 //bootstrapUI date picker 
 .directive("datepicker",function datepickerDirective() {
 	return {
@@ -1175,7 +1220,6 @@ angular.module("pouchy.model",[])
 						while(node.className.indexOf("main-table-tr") === -1) {
 							node = node.parentElement;
 						}
-						//console.log(e);
 						var data = $(node).data("context-info");
 						var newData = {};
 						for(var key in data) {
@@ -1295,6 +1339,7 @@ angular.module("pouchy.cidLogic",[])
 		//if new cid then assign _id as creation data otherwise the cid gets overwritten with
 		//new values from the update formular
 		if(!data["_id"]) data["_id"] = new Date().toISOString();
+		console.log(data);
 		$pouchyModel.databaseContainer["cid_db"].addItem(data);
 		$scope.hide();
 	}
@@ -1385,10 +1430,9 @@ angular.module("pouchy.cidLogic",[])
 		createCID: createCID
 	}
 }])
-.directive("cidModal",["$pouchyModelDatabase",function($pouchyModelDatabase) {
+.directive("cidModal",function() {
 	return {
 		restrict: "A",
-		scope: true,
 		controller: "cidCtrl",
 		require: "^^modalOnDemand",
 		link: function(scope,element,attr,ctrl) {
@@ -1397,36 +1441,7 @@ angular.module("pouchy.cidLogic",[])
 			}
 		}
 	}
-}])
-.directive("cidModalCaller",["$modalService",function cidModalDirective($modalService) {
-	return {
-		restrict: "A",
-		scope: {
-			cidData: "="
-		},
-		link: function(scope,element,attr) {
-			element.on("click",function() {
-				scope.$apply(function() {
-					$modalService.open({template:"create",barColor:"white",data:scope.cidData}).
-					then(function() {
-						console.log("resolved");
-					},function() {
-						console.log("rejected");
-					})
-				});
-			});
-		}
-	}
-}]);
-/*.directive("widCheck",function widCheckDirective() {
-	return {
-		link: function(scope,elemt,attr) {
-			elemt.bind("change",function() {
-				scope.checkWID(elemt[0].value,attr.widCheck);
-			});
-		}
-	}
-});*/
+});
 //
 //###CID-Logic Module###END
 //

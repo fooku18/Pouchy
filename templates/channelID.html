@@ -1,5 +1,5 @@
 <div ng-controller="mainCtrl" db="channelid_db">
-	<form name="userForm" ng-submit="validation(userForm.$valid,{'channelID':c.ChannelID,'channel':c.Channel})" novalidate>
+	<form name="userForm" ng-submit="validation(userForm,{'channelID':c.ChannelID,'channel':c.Channel})" novalidate>
 		<div class="row padding-top-10 padding-bottom-10">
 			<div class="col-md-8 col-sm-8 block form-group" ng-class="{'has-error': userForm.cChannelID.$invalid && !userForm.cChannelID.$pristine}">
 				<div class="padding-bottom-5">
