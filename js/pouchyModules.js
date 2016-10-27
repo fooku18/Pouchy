@@ -878,13 +878,14 @@ angular.module("pouchy.model",[])
 	this.dbCount = 0;
 	this.syncHandlerCount = [];
 	this.databaseContainer = {};
-	this.query = function(dbase,data) {
+	this.query = function(dbase,data,includeDocs,key) {
 		var defer = $q.defer();
-		this.databaseContainer[dbase].db.query(data).then(function(doc) {
-			console.log("RESOLVE");
+		var options = {};
+		if(includeDocs) options.include_docs = true;
+		if(key) options.key = key;
+		this.databaseContainer[dbase].db.query(data,options).then(function(doc) {
 			defer.resolve(doc);
 		}, function() {
-			console.log("REJECT");
 			defer.reject();
 		});
 		return defer.promise;
@@ -1050,6 +1051,8 @@ angular.module("pouchy.model",[])
 			//the same properties (except start and end dates) the _ids are equal and the
 			//dataset only gets updated. this is to prevent duplicates
 			data["_id"] = hashVal;
+			//add creation date do dataset - this is handy for sorting issues
+			data["creationdate"] = new Date().toISOString();
 		//if _id already exists the dataset only needs to get updated - pouch/couch will
 		//will take care of this automatically and will add a new revision to the dataset
 		} else {
@@ -1057,14 +1060,37 @@ angular.module("pouchy.model",[])
 			//main cid pool of datasets needs to get updated too. these datasets also need to be 
 			//flagged as not up to date relating to SAINT classification
 			if(db = "campaigns_db") {
-				var idx = $pouchyDesignViews.design("campaign_id");
-				console.log(idx);
+				var identifier = "campaign";
+				var idx = $pouchyDesignViews.design(identifier);
+				console.log(data);
+				console.log("CHANGED: " + data._id);
+				/**	
+				*	query cid_db for the changed data from campaigns_db
+				*
+				*	@param {String,String,Boolean,String} (DatabaseName,IndexName,IncludeDocs,SearchKey)
+				*	@return {Promise} returned promise contains matching data
+				*/
+				$pouchyModel.query("cid_db",idx,true,data._id).then(function(doc) {
+					console.log(angular.copy(doc));
+					if(doc.rows.length) {
+						//copy changed values into new object which later changes all matching cid datasets
+						var changedData = {};
+						angular.forEach(data,function(val,key) {
+							if(key !== "_id" && key !== "_rev" && key !== "type" && key !== "intext") {
+								changedData[key] = val;
+							}
+						});
+						for(var i=0;i<doc.rows.length;i++) {
+							angular.forEach(changedData,function(val,key) {
+								doc.rows[i].doc[identifier + "_" + key] = val;
+							});
+						}
+					}
+					console.log(doc);
+				});
 			}
 		}
-		//add creation date do dataset - this is handy for sorting issues
-		data["creationdate"] = new Date().toISOString();
 		//$pouchyModel.databaseContainer[db].addItem(data);
-		console.log(data);
 	}
 	//UI delete data
 	$scope.deleteItem = function(doc) {
@@ -1091,7 +1117,7 @@ angular.module("pouchy.model",[])
 .service("$pouchyDesignViews",["$pouchyModel",function($pouchyModel) {
 	function createDesignView(indexName) {
 		var idx = "index_" + indexName;
-		var mapStr = "function(doc) {emit(doc." + indexName + ")}";
+		var mapStr = "function(doc) {emit(doc." + indexName + "_id)}";
 		var ddoc = {};
 		ddoc._id = "_design/" + idx;
 		ddoc.views = {};
@@ -1099,7 +1125,7 @@ angular.module("pouchy.model",[])
 		ddoc.views[idx].map = mapStr;
 		
 		$pouchyModel.databaseContainer["cid_db"].addItem(ddoc).then(function() {
-			return $pouchyModel.query("cid_db",idx);
+			return $pouchyModel.query("cid_db",idx,false,false);
 		}).then(function() {
 			console.log("_designView created");
 		});
