@@ -10,7 +10,7 @@
 	},
 	"routingConfig": {
 		"htmlPath": ["templates/kampagnen.html","templates/intelliad.html","templates/channelID.html","templates/create.html"],
-		"hashTag": ["/","/IntelliAd","/channelID","/create"],
+		"hashTag": ["/","/intelliad","/channelid","/create"],
 		"pageNames": ["Kampagnen-Konfiguration","IntelliAd-Konfiguration","ChannelID-Konfiguration","ID Erstellen"]
 	},
 	"cidConfig": {
@@ -18,6 +18,9 @@
 		"organizationToken": "dpcom"
 	},
 	"analyticsConfig": {
-	
+		"username": "xxx",
+		"secret": "xxx",
+		"reportSuite": "xxx",
+		"endpoint": "api.omniture.com"
 	}
 }

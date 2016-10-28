@@ -88,60 +88,6 @@ angular.module("pouchy.navigation",[])
 //
 
 //
-//###News Module###START
-//
-angular.module("pouchy.news",[])
-.controller("newsCtrl",["$scope",function newsController($scope) {
-	$scope.status = false;
-	$scope.statusChange = function() {
-		$scope.status = !$scope.status
-		if($scope.status) {
-			$(".context-content-wrapper").width(window.innerWidth/2);
-		} else {
-			$(".context-content-wrapper").width(0);
-		}
-	}
-}])
-.directive("news",function newsDirective() {
-var tmp = 	"<div class='context-info absolute'>" +
-				"<div class='context-wrapper' ng-class={'expand':status}>" +
-					"<div class='context-expander' ng-click='statusChange()'>" +
-						"<div class='context-expander-arrow'>" + 
-							"<span class='glyphicon glyphicon-chevron-left glyphicon-20' ng-if='!status'></span>" +
-							"<span class='glyphicon glyphicon-chevron-right glyphicon-20' ng-if='status'></span>" +
-						"</div>" + 
-					"</div>" + 
-					"<div class='context-content-wrapper'>" + 
-						"<div class='context-content-frame'>" +
-							"<div class='context-content-content'>" +
-								"<h1>HUND</h1>" +
-								"<h1>HUND</h1>" +
-								"<h1>HUND</h1>" +
-								"<h1>HUND</h1>" +
-								"<h1>HUND</h1>" +
-								"<h1>HUND</h1>" +
-							"</div>" +
-						"</div>" + 
-					"</div>" +
-				"</div>" +
-			"</div>";
-	return {
-		restrict: "E",
-		scope: {},
-		template: tmp,
-		replace: true,
-		controller: "newsCtrl",
-		link: function(scope,element,attr) {
-			
-		}
-	}
-});
-
-//
-//###News Module###END
-//
-
-//
 //###Modal Module###START
 //
 angular.module("pouchy.modal",[])
@@ -241,95 +187,6 @@ angular.module("pouchy.modal",[])
 //
 //###Modal Module###END
 //
-
-//
-//###Clipboard Module###START
-//
-angular.module("pouchy.clipboard",[])
-/*.controller("clipboardController",["$scope","$timeout",function clipboardController($scope,$timeout) {
-	var urls = ["targeturl","campaignID","FQ","cid"];
-	var urlsTranslation = ["Ziel-URL","Kampagnen-Nummer","Vollqualifizierter Link","Kampagnen-ID (CID)"];
-	var clip = $(".specialInput")[$scope.cbvalue.id];
-	
-	(function() {
-		$scope.cbvaluenew = [];
-		for(var key in $scope.cbvalue.doc) {
-			if(!$scope.cbvalue.doc.hasOwnProperty(key)) continue;
-			for(var i=0;i<=urls.length-1;i++) {
-				if(urls[i] === key) $scope.cbvaluenew.push({key:urlsTranslation[i],value:$scope.cbvalue.doc[key]});
-			}
-		}
-	})();
-	
-	$scope.show = false;
-	$scope.showme = function() {
-		if(!$scope.show) {
-			var el = document.getElementsByClassName("spid_" + $scope.cbvalue.id);
-			for(var i=0;i<=el.length-1;i++) {
-				el[i].style.width = ((el[i].value.length + 1) * 7) + "px";
-			}
-			$scope.show = true;
-			$(".clipboard-clipboardinfo")[$scope.cbvalue.id].classList.add("clipboard-popup");
-		} 
-	};
-	
-	$scope.close = function() {
-		$(".clipboard-clipboardinfo")[$scope.cbvalue.id].classList.add("clipboard-popout");
-		$timeout(function() {
-			$scope.show = false;
-			$(".clipboard-clipboardinfo")[$scope.cbvalue.id].classList.remove("clipboard-popout");
-		},500);
-	}
-	
-	$scope.copytoclipboard = function(val) {
-		var inp = document.getElementsByClassName("spid_" + $scope.cbvalue.id)[val];
-		var info = document.getElementsByClassName("ci_" + $scope.cbvalue.id + "_" + val)[0];
-		inp.select();
-		try {
-			document.execCommand("copy");
-		}catch(err) {
-			console.log("not supported");
-		}finally {
-			info.classList.add("clipboard-copied-info-show");
-			$timeout(function() {
-				$scope.show = false;
-				info.classList.remove("clipboard-copied-info-show");
-			},1000);
-		}
-	}
-}])
-.directive("clipboard",function clipboardDirective() {
-	return {
-		restrict: "A",
-		scope: {
-			cbvalue: "="
-		},
-		transclude: true,
-		template: "<div ng-transclude=''></div>" +
-					"<div class='clipboard-overlay' ng-click='showme()'>" +
-						"<div class='absolute clipboard-clipboardinfo' ng-show='show'>" + 
-							"<span class='clipboard-close glyphicon glyphicon-remove' ng-click='close()'></span>" +
-							"<div class='clipboard-clipboardframe'>" + 
-								"<div class='clipboard-url-block' ng-repeat='i in cbvaluenew track by $index'>" +
-									"<div class='clipboard-block-title'>" + 
-										"{{i.key}}" +
-									"</div>" +
-									"<div class='clipboard-block-url'>" +
-										"<div class='clipboard-full-width relative'>" +
-											"<input class='clipboard-specialInput spid_{{cbvalue.id}}' ng-value='i.value' ng-click='copytoclipboard($index)'></span>" +
-											"<span class='absolute clipboard-copied-info ci_{{cbvalue.id}}_{{$index}}'>kopiert</span>" +
-										"</div>" +
-									"</div>" +
-							"</div>" +
-						"</div>" +
-					"</div>",
-		controller: "clipboardController"
-	}
-});
-//
-//###Clipboard Module###END
-//
-*/
 
 //
 //###Pagination Module###START
@@ -1005,7 +862,7 @@ angular.module("pouchy.model",[])
 		$scope.$apply(function() {
 			$scope.items = angular.copy(data);
 			//filter by creationdate
-			//$scope.items = $filter("orderBy")($scope.items,"doc.creationdate");
+			$scope.items = $filter("orderBy")($scope.items,"doc.creationdate");
 		});
 	});
 	//UI input data need to be validated before pouch/couch is updated. Validation is defined on the relevant userforms
@@ -1059,38 +916,47 @@ angular.module("pouchy.model",[])
 			//extra behaviour due campaign data changes - if several properties get changed the 
 			//main cid pool of datasets needs to get updated too. these datasets also need to be 
 			//flagged as not up to date relating to SAINT classification
-			if(db = "campaigns_db") {
-				var identifier = "campaign";
-				var idx = $pouchyDesignViews.design(identifier);
-				console.log(data);
-				console.log("CHANGED: " + data._id);
-				/**	
-				*	query cid_db for the changed data from campaigns_db
-				*
-				*	@param {String,String,Boolean,String} (DatabaseName,IndexName,IncludeDocs,SearchKey)
-				*	@return {Promise} returned promise contains matching data
-				*/
-				$pouchyModel.query("cid_db",idx,true,data._id).then(function(doc) {
-					console.log(angular.copy(doc));
-					if(doc.rows.length) {
-						//copy changed values into new object which later changes all matching cid datasets
-						var changedData = {};
-						angular.forEach(data,function(val,key) {
-							if(key !== "_id" && key !== "_rev" && key !== "type" && key !== "intext") {
-								changedData[key] = val;
-							}
-						});
-						for(var i=0;i<doc.rows.length;i++) {
-							angular.forEach(changedData,function(val,key) {
-								doc.rows[i].doc[identifier + "_" + key] = val;
-							});
+			var a = [],
+				changedData = {},
+				identifier,idx,
+				targetDB = "cid_db";
+							
+			identifier = db.substr(0,db.indexOf("_"));
+			idx = $pouchyDesignViews.design(identifier);
+			console.log(data);
+			console.log("CHANGED: " + data._id);
+			/**	
+			*	query cid_db for the changed data from campaigns_db
+			*
+			*	@param {String,String,Boolean,String} (DatabaseName,IndexName,IncludeDocs,SearchKey)
+			*	@return {Promise} returned promise contains matching data
+			*/
+			$pouchyModel.query(targetDB,idx,true,data._id).then(function(doc) {
+				if(doc.rows.length) {
+					//copy changed values into new object which later changes all matching cid datasets
+					var changedData = {};
+					angular.forEach(data,function(val,key) {
+						if(key !== "_id" && key !== "_rev" && key !== "type" && key !== "intext") {
+							changedData[key] = val;
 						}
+					});
+					var a = [];
+					for(var i=0;i<doc.rows.length;i++) {
+						angular.forEach(changedData,function(val,key) {
+							doc.rows[i].doc[identifier + "_" + key] = val;
+							//add time stamp of last modification
+							doc.rows[i].doc.modified = new Date().toISOString();
+						});
+						a.push(doc.rows[i].doc);
 					}
-					console.log(doc);
-				});
-			}
+					$pouchyModel.databaseContainer.cid_db.db.bulkDocs(a).then(function(res) {
+						console.log(res);
+					});
+				}
+			});
+		
 		}
-		//$pouchyModel.databaseContainer[db].addItem(data);
+		$pouchyModel.databaseContainer[db].addItem(data);
 	}
 	//UI delete data
 	$scope.deleteItem = function(doc) {
@@ -1148,6 +1014,11 @@ angular.module("pouchy.model",[])
 		return newSet;
 	}
 })
+.filter("dateFormatDE",function() {
+	return function(val) {
+		return val.substr(8,2) + "." + val.substr(5,2) + "." + val.substr(0,4);
+	}
+})
 //bootstrapUI date picker 
 .directive("datepicker",function datepickerDirective() {
 	return {
@@ -1191,36 +1062,71 @@ angular.module("pouchy.model",[])
 	   }
 	}
 })
-.directive("onOffSwitch",function() {
+.directive("onOffSwitch",["$parse",function($parse) {
 	var tmp = 	"<div>" +
 					"<input type='checkbox' ng-click='switchSAINT()'>" +
 				"</div>";
 	return {
 		template: tmp,
-		controller: "mainCtrl",
 		scope: {
-			saintstatus: "="
+			dataset: "@"
 		},
 		link: function(scope,element,attr) {
-			scope.saintstatus = (scope.saintstatus === undefined) ? !!scope.saintstatus : scope.saintstatus;
-			scope.switchSAINT = function() {
-				scope.saintstatus = !scope.saintstatus;
-			}
+			//var getter = $parse(attr.dataset.saintstatus);
+			//var setter = getter.assign;
+			//scope.saintstatus = (scope.saintstatus === undefined) ? !!scope.saintstatus : scope.saintstatus;
+			//scope.switchSAINT = function() {
+			//	scope.saintstatus = !scope.saintstatus;
+			//	setter(scope.$parent.item.doc,scope.saintstatus);
+			//}
 		}
 	}
-})
+}])
+.factory("$pouchySAINTAPI",["$http","DATALAYER",function pouchySAINTFactory($http,DATALAYER) {
+	//WSSE is a hash library provided by Adobe
+	var wsse = new Wsse();
+	/**
+	*	SAINT (RESTful API) implementation for Classification in Adobe Analytics
+	*	@params {String,Object}
+	*		RestAPI @1(method - see adobe manual for more information),
+	*		@2(params for designated method)
+	*	@return {Promise}
+	*/
+	function requestSAINT(method,params) {
+		var x = wsse.generateAuth(DATALAYER.analyticsConfig.username,DATALAYER.analyticsConfig.secret)["X-WSSE"];
+		return $http({
+			method: "POST",
+			url: "https://" + DATALAYER.analyticsConfig.endpoint + "/admin/1.4/rest/?method=" + method,
+			headers: {
+				"X-WSSE": x
+			},
+			data: params
+		});
+	}
+	
+	return {
+		//requestSAINT
+	}
+}])
 .directive("contextMenu",function($compile) {
 	return {
 		restrict: "A",
 		controller: function($scope) {
 			$scope.values = {};
 			$scope.copyValue = function (value) {
-				var inp = $("input[data-id='" + value + "']");
-				inp.select();
+				var inp,
+					range,
+					selection;
+				inp = $("div[data-id='" + value + "']").get(0);
+				range = document.createRange();
+				range.selectNodeContents(inp);
+				selection = window.getSelection();
+				selection.removeAllRanges();
+				selection.addRange(range);
 				try {
-					document.execCommand("copy");
-				}catch(err) {
-					console.log("not supported");
+					document.execCommand("copy",false,null);
+				} catch(e) {
+					console.log("execCommand not supported");
 				}
 			}
 		},
@@ -1230,7 +1136,7 @@ angular.module("pouchy.model",[])
 								"<li class='context-menu-li' ng-repeat='(key,value) in values'>" +
 									"<a class='context-menu-li-content'>" +
 										"{{key}}: " + 
-										"<input data-id='{{key}}' class='context-menu-borderless-input' ng-value='value' ng-click='copyValue(key)' />" +
+										"<div data-id='{{key}}' class='inline-block' ng-click='copyValue(key)'>{{value}}</div>" +
 									"</a>" +
 								"<li>" + 
 							"</ul>" +
@@ -1346,15 +1252,14 @@ angular.module("pouchy.cidLogic",[])
 	}
 	//changes the cid UI in case of external or internal campaign
 	$scope.isActive = function(val) {
-		if(val === "Extern") {
-			$scope.values.intcampaign = "";
-			return true;
-		} else {
-			$scope.values.extcampaign = "";
-			$scope.values.extintellicampaign = "";
-			return false;
+		var a = (val === "Extern") ? true : false;
+		return a;
+	}
+	$scope.intextChanger = function(data) {
+		if(data === "Intern") {
+			delete $scope.values.intelliad_name;
 		}
-	}	
+	}
 	$scope.validation = function(val,data) {
 		if(val.$valid) {
 			var data = $pouchyCIDLogic.createCID(data,$scope.intelliAdCampaigns,$scope.extCampaigns,$scope.intCampaigns,$scope.creativeChannel);
@@ -1369,29 +1274,15 @@ angular.module("pouchy.cidLogic",[])
 		$pouchyModel.databaseContainer["cid_db"].addItem(data);
 		$scope.hide();
 	}
-	$scope.intextChanger = function(data) {
-		if(data === "Intern") {
-			$scope.values.extcampaign = "";
-			$scope.values.extintellicampaign = "";
-		} else {
-			$scope.values.intcampaign = "";
-		}
-	}
 }])
 //this factory serves as the cid generator logic. the services receives all necessary information
 //about the data input and creates a unique cid and if desired an intelliad link wrapper.
 .factory("$pouchyCIDLogic",["DATALAYER","$pouchyModelDatabase","$msgBusService",function pouchyCIDLogicFactory(DATALAYER,$pouchyModelDatabase,$msgBusService) {
 	function createCID(data,intelliAdCampaigns,extCampaigns,intCampaigns,creativeChannel) {
-		console.log(data);
-		console.log(intelliAdCampaigns);
-		console.log(extCampaigns);
-		console.log(intCampaigns);
-		console.log(creativeChannel);
-	
-		if(typeof(data.extcampaign) !== "undefined" && data.extcampaign !== "") {
+		if(data.campaign_intext === "Extern") {
 			//add intelliadCamp to new Dataset
 			for(var i=0;i<=intelliAdCampaigns.length-1;i++) {
-				if(intelliAdCampaigns[i].name === data.extintellicampaign) {
+				if(intelliAdCampaigns[i].name === data.intelliad_name) {
 					data.intelliad_id = intelliAdCampaigns[i]._id;
 					data.intelliad_root = intelliAdCampaigns[i].root;
 					data.intelliad_ext = intelliAdCampaigns[i].ext;
@@ -1400,7 +1291,7 @@ angular.module("pouchy.cidLogic",[])
 			}
 			//add EXTcampaignID to new Dataset
 			for(var i=0;i<=extCampaigns.length-1;i++) {
-				if(extCampaigns[i].name === data.extcampaign) {
+				if(extCampaigns[i].name === data.campaign_name) {
 					data.campaign_id = extCampaigns[i]._id;
 					data.campaign_type = extCampaigns[i].type.charAt(0).toLowerCase();
 					data.campaign_start = extCampaigns[i].start;
@@ -1412,7 +1303,7 @@ angular.module("pouchy.cidLogic",[])
 		} else {
 			//add INTcampaignID to new Dataset
 			for(var i=0;i<=intCampaigns.length-1;i++) {
-				if(intCampaigns[i].name === data.intcampaign) {
+				if(intCampaigns[i].name === data.campaign_name) {
 					data.campaign_id = intCampaigns[i]._id;
 					data.campaign_type = intCampaigns[i].type.charAt(0).toLowerCase();
 					data.campaigns_start = intCampaigns[i].start;
@@ -1424,17 +1315,16 @@ angular.module("pouchy.cidLogic",[])
 		}
 		//add ChannelID to new Dataset
 		for(var i=0;i<=creativeChannel.length-1;i++) {
-			if(creativeChannel[i].channel === data.creativechannel) {
+			if(creativeChannel[i].channel === data.creative_channel) {
 				data.creative_id = creativeChannel[i]._id;
 				data.creative_channelid = creativeChannel[i].channelID;
-				data.creative_channel = creativeChannel[i].channel;
 			}
 		}
 		
 		//generate CID 
 		var domainToken = DATALAYER.cidConfig.domainToken;
 		var organizationToken = DATALAYER.cidConfig.organizationToken;
-		//if question mark exists then add ampersand and concatenate
+		//if question mark does exist then add ampersand and concatenate
 		var cid = data.campaign_type + "_" + domainToken + "_" + data.creative_channelid + data.campaign_suffix + "_" + organizationToken + "_" + data.campaign_id + "_" + data.adid + "_" + data.randomid;
 		if(data.targeturl.indexOf("?") > -1) {
 			var FQ = data.targeturl + "&" + cid;
@@ -1445,9 +1335,11 @@ angular.module("pouchy.cidLogic",[])
 		data.FQ = FQ;
 		data.cid = cid;
 		if(data.intelliad_id) {
-			data.intelliencoded = data.intelliad_root + encodeURIComponent(data.FQ) + data.intelliad_ext;
+			data.intelliad_encoded = data.intelliad_root + encodeURIComponent(data.FQ) + data.intelliad_ext;
 		}
 		data.saintstatus = false;
+		//time stamp of last modification
+		data.modified = new Date().toISOString();
 		
 		return data;
 	}
