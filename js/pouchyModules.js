@@ -341,126 +341,116 @@ filter("included",function includedFilter() {
 //
 angular.module("pouchy.import_export",["pouchy.multiPurpose","pouchy.FileReader"])
 .factory("exportFactory",function exportFactory() {
-	var saveData = (function () {
+	/**
+	 * Export File 
+	 *
+	 * exports current databases and data in desired format
+	 *
+	 * @param {string} fileName
+	 * @param {object} data
+	 * @return {void}
+	 */
+	function exportjson(fileName,data) {
 		var a = document.createElement("a");
 		document.body.appendChild(a);
 		a.style = "display: none";
-		return function (data, fileName) {
-			var json = JSON.stringify(data),
-			//	blob = new Blob([json], {type: "octet/stream"}),
-			//	url = window.URL.createObjectURL(blob);
-			url = "data:application/json,";
-			a.href = url + json;
-			a.download = fileName;
-			a.click();
-			window.URL.revokeObjectURL(url);
-		};
-	}());
+		var json = JSON.stringify(data),
+		url = "data:application/json,";
+		a.href = url + json;
+		a.download = fileName;
+		a.click();
+		document.removeChild(a);
+	}
 	
-	function exportFile(data,fileName) {
-		saveData(data, fileName);
+	function exportcsv(fileName,data) {
+		var dataStream;
+		for(var key in data) {
+			dataStream += "#########" + key + "#########" + "\n";
+			for(var k in data[key][0].doc) {
+				dataStream += k + ";" 
+			}
+			dataStream += "\n";
+			for(var i=0;i<data[key].length;i++) {
+				for(var k in data[key][i].doc) {
+					dataStream += data[key][i].doc[k] + ";";
+				}
+				dataStream += "\n";
+			}
+		}
+		var encodedStream = encodeURIComponent(dataStream);
+		var a = document.createElement("a");
+		document.body.appendChild(a);
+		a.style = "display: none";
+		url = "data:text/csv;charset=utf-8,";
+		a.href = url + encodedStream;
+		a.download = fileName;
+		a.click();
+		document.removeChild(a);
 	}
 	
 	return {
-		exportFile: exportFile
+		exportjson: exportjson,
+		exportcsv: exportcsv
 	}
 })
-.controller("downloadCtrl",["$scope","exportFactory","$pouchDB","DATALAYER","$q",function downloadCtrl($scope,exportFactory,$pouchDB,DATALAYER,$q) {
-	$scope.downloadBoxActive = false;
-	$scope.export = false;
-	$scope.import = false;
-	this.toggleWindow = function() {
-		$scope.downloadBoxActive = !$scope.downloadBoxActive;
-	};
-	this.toggleText = function(val) {
-		$scope.export = false;
-		$scope.import = false;
-		$scope[val] = !$scope[val];
-	};
-	$scope.progressBarStatus = 0;
-	this.updateProgressBar = function(val) {
-		if(val < 100) {
-			$scope.progressBarStatus = val;
-		} else {
-			$scope.progressBarStatus = 0;
-		}
-	}
-	$scope.exportFile = function(val) {
-		var chain = [];
-		//for(var i=0;i<=DATALAYER.databaseConfig.databases.length-1;i++) {
-		//	chain.push(DATALAYER.databaseConfig.databases[i]);
-		//}
-		//$pouchDB.fetchAllDocs("cid_db");
-	}
-}])
-.directive("downloadPop",function downloadPopDirective() {
-	var tmp = 	"<div class='border-wrapper absolute' ng-show='downloadBoxActive'>" +
-					"<div class='padding-left-relative-80'>" +
-						"<div class='download-arrow'></div>" +
+.directive("downloadPop",["exportFactory","$pouchyModelDatabase",function downloadPopDirective(exportFactory,$pouchyModelDatabase) {
+	var tmp = 	"<div class='importexport-wrapper relative'>" +
+					"<div class='importexport-icons'>" + 
+						"<span data-id='export' class='importexport lg glyphicon glyphicon-save glyphicon-30 glyphicon-a'></span>" +
+						"<span data-id='import' class='importexport lg glyphicon glyphicon-open glyphicon-30 glyphicon-a'></span>" +
 					"</div>" +
-					"<div class='download-container'>" +
-						"<div ng-show='export'>" +
-							"<h4 class='download-headline'>Import</h4>" +
-							"<div class='download-frame'>" +
-								"<div class='download-content'>" +
-									"<label for='upload-input' class='full btn btn-default'>Upload</label>" +
-									"<div class='download-loading-wrapper'>" +
-										"<div class='download-loading-bar'>" + 
-											"<div class='download-loading-process' ng-style='{width: progressBarStatus + \"px\"}'>" +
-											"</div>" +
-										"</div>" +
-									"</div>" +
-									"<input type='file' name='upload-input' id='upload-input' class='display-none' file-reader />" +
-								"</div>" +
-							"</div>" +
-						"</div>" +
-						"<div ng-show='import'>" +
-							"<h4 class='download-headline'>Export</h4>" +
-							"<div class='download-frame'>" +
-								"<div class='download-content'>" +
-									"<div class='padding-10 cursor-pointer download-top' ng-click='exportFile(\"json\")'>" +
-										"<b>.JSON</b> &nbsp; <span class='glyphicon glyphicon-floppy-save glyphicon-20 pull-right'></span>" +
-									"</div>" +
-									"<div class='padding-10 cursor-pointer' ng-click='exportFile(\"csv\")'>" +
-										"<b>.CSV</b> &nbsp; <span class='glyphicon glyphicon-floppy-save glyphicon-20 pull-right'></span>" +
-									"</div>" +
-								"</div>" +
-							"</div>" +
+					"<div class='importexport-menu absolute'>" + 
+						"<div class='importexport-framer'>" +
+							"<h4 ng-if='import'>Import</h4>" +
+							"<h4 ng-if='!import'>Export</h4>" +
+							"<div class='importexport-content' ng-show='export'>" + 
+								"<button class='btn btn-default importexport-btn' ng-click='getFile(\"json\")'>JSON</button>" +
+								"<button class='btn btn-default importexport-btn' ng-click='getFile(\"csv\")'>CSV</button>" +
+							"</div>" + 
+							"<div class='importexport-content' ng-show='import'>" + 
+								"<label class='btn btn-default importexport-btn' file-reader>JSON" + 
+								"<input type='file' class='display-none' />" + 
+								"</label>" +
+								"<label class='btn btn-default importexport-btn' file-reader>CSV" + 
+								"<input type='file' class='display-none' />" + 
+								"</label>" +
+							"</div>" + 
 						"</div>" +
 					"</div>" +
 				"</div>";
 	return {
 		restrict: "A",
 		scope: {},
-		controller: "downloadCtrl",
 		template: tmp,
-		transclude: true,
-		link: function(scope,element,attr,ctrl,transcludeFn) {
-			transcludeFn(scope,function(clone) {
-				element.append(clone);
+		link: function(scope,element,attr) {
+			scope.getFile = function(format) {
+				var date = new Date().toISOString();
+				if(format === "json") exportFactory.exportjson("export_json.json",$pouchyModelDatabase.database);
+				if(format === "csv") exportFactory.exportcsv("export_csv.csv",$pouchyModelDatabase.database);
+			};
+			element.on("click",function(e) {
+				if(!e.target.attributes["data-id"]) return;
+				if(e.target.attributes["data-id"].value === "import") {
+					scope.import = true;
+					scope.export = false;
+				}
+				if(e.target.attributes["data-id"].value === "export") {
+					scope.import = false;
+					scope.export = true;
+				}
+				scope.$apply();
+			});
+			$(document).click(function(e) {
+				if(e.target.className.indexOf("importexport") === -1) {
+					$(element[0].querySelector(".importexport-wrapper")).removeClass("importexport-wrapper-dropdown");
+				} else {
+					if(!e.target.attributes["data-id"]) return;
+					$(element[0].querySelector(".importexport-wrapper")).addClass("importexport-wrapper-dropdown");
+				}
 			});
 		}
 	}
-})
-.directive("importExport",function importExportDirective() {
-	return {
-		restrict: "A",
-		require: "^downloadPop",
-		scope: true,
-		link: function(scope,element,attr,ctrl) {
-			element.on("click",function() {
-				scope.$apply(function() {
-					ctrl.toggleWindow();
-					if(attr["importExport"] === "export") {
-						ctrl.toggleText("export");
-					} else {
-						ctrl.toggleText("import");
-					}
-				})
-			});
-		}
-	}
-});
+}]);
 //
 //###Import/Export Module###END
 //
@@ -472,44 +462,31 @@ angular.module("pouchy.FileReader",["pouchy.import_export"])
 .directive("fileReader",["$modalService",function($modalService) {
 	return {
 		restrict: "A",
-		scope: {},
-		require: "^downloadPop",
+		scope: {
+			
+		},
 		link: function(scope,element,attr,ctrl) {
 			element.on("change",function(changeEvent) {
 				var file = changeEvent.target.files[0];
-				var fileType = /^application\/json$/;
-				if(file.type.match(fileType)) {
-					var reader = new FileReader();
-					reader.onload = function (loadEvent) {
-						scope.$apply(function () {
-							scope.ngFileModel = {
-								lastModified: changeEvent.target.files[0].lastModified,
-								lastModifiedDate: changeEvent.target.files[0].lastModifiedDate,
-								name: changeEvent.target.files[0].name,
-								size: changeEvent.target.files[0].size,
-								type: changeEvent.target.files[0].type,
-								data: loadEvent.target.result
-							};
-							ctrl.updateProgressBar(100);
-						});
-					}
-					reader.onprogress = function(event) {
-						if(event.lengthComputable) {
-							ctrl.updateProgressBar(100 * (event.loaded / event.total));
-						}
-					}
-					reader.readAsText(changeEvent.target.files[0]);
-				} else {
-					console.log("File Extension Error");
-					scope.$apply(function(){
-						$modalService.open({template:"fileExtensionError",barColor:"red"}).
-						then(function() {
-							console.log("resolved");
-						},function() {
-							console.log("rejected");
-						})
+				var reader = new FileReader();
+				reader.onload = function (loadEvent) {
+					scope.$apply(function () {
+						scope.ngFileModel = {
+							lastModified: changeEvent.target.files[0].lastModified,
+							lastModifiedDate: changeEvent.target.files[0].lastModifiedDate,
+							name: changeEvent.target.files[0].name,
+							size: changeEvent.target.files[0].size,
+							type: changeEvent.target.files[0].type,
+							data: loadEvent.target.result
+						};
+						console.log(scope);
 					});
 				}
+				reader.onprogress = function(event) {
+					console.log(event);
+					scope.$apply();
+				}
+				reader.readAsText(changeEvent.target.files[0]);
 			});
 		}
 	}

@@ -95,11 +95,12 @@ input:checked + .slider:before {
 	top:50px;
 	left: 0;
 	background-color: #ffffff;
-	border: 1px solid black;
+	border: 1px solid #ddd;
 	border-radius: 5px;
 	top: 40px;
 	transform: scale(1,0);
 	width: 150%;
+	box-shadow: 4px 4px 80px #000;
 }
 
 .slider-remote-config-framer {
