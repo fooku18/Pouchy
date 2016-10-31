@@ -20,7 +20,9 @@
 	"analyticsConfig": {
 		"username": "xxx",
 		"secret": "xxx",
-		"reportSuite": "xxx",
-		"endpoint": "api.omniture.com"
+		"reportSuite": "deutschepostwpmdhlmpdev2",
+		"endpoint": "api.omniture.com",
+		"notification_email_address": "jakob.schlonsok@deutschepost.de",
+		"classification_element": "trackingcode"
 	}
 }

@@ -1,0 +1,11 @@
+{
+	"job_id":"45927076",
+	"page":"1",
+	"rows":[
+		{
+			"row":[
+				"123","Campaign Type","Creative Channel","Campaign ID","Campaign","Campaign Start","Campaign End","Creative Placement","Creative Type","Creative","Domain"
+			]
+		}
+	]
+}

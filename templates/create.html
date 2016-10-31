@@ -1,6 +1,6 @@
 <div ng-controller="mainCtrl" db="cid_db">
 	<div class="row">
-		<div class="col-md-12 col-sm-12">
+		<div id="context-0-0" class="col-md-12 col-sm-12">
 			<div class="searchbar-search col-md-12 col-sm-12">
 				<div class="col-md-8 col-sm-8 relative">
 					<input type="text" class="form-control" ng-model="searchKey" />
@@ -58,7 +58,7 @@
 					</div>
 					<div class="main-table-tr-wrapper">
 						<div class="main-table-tr" ng-repeat="item in searchitems = (items | pages:searchKey:currentPage:showRows:showFilter.id | orderBy:doc.modified:false | removeDesigns ) track by $index" data-context-info="{{item.doc}}">
-							<div class="col-sm-1" on-off-switch dataset="{{item.doc}}"></div>
+							<div class="col-sm-1" on-off-switch></div>
 							<div class="col-sm-1">{{item.doc.modified | dateFormatDE}}</div>
 							<div class="col-sm-3">{{item.doc.targeturl}}</div>
 							<div class="col-sm-1">{{item.doc.ad}}</div>

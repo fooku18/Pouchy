@@ -363,14 +363,21 @@ angular.module("pouchy.import_export",["pouchy.multiPurpose","pouchy.FileReader"
 	}
 	
 	function exportcsv(fileName,data) {
-		var dataStream;
+		var dataStream,
+			x;
 		for(var key in data) {
+			x=0;
 			dataStream += "#########" + key + "#########" + "\n";
-			for(var k in data[key][0].doc) {
+			for(var a=0;a<data[key].length;a++) {
+				if((data[key][a].id).substr(0,7) === "_design") {
+					x++;
+				}
+			}
+			for(var k in data[key][x].doc) {
 				dataStream += k + ";" 
 			}
 			dataStream += "\n";
-			for(var i=0;i<data[key].length;i++) {
+			for(var i=x	;i<data[key].length;i++) {
 				for(var k in data[key][i].doc) {
 					dataStream += data[key][i].doc[k] + ";";
 				}
@@ -906,6 +913,8 @@ angular.module("pouchy.model",[])
 			*	query cid_db for the changed data from campaigns_db
 			*
 			*	@param {String,String,Boolean,String} (DatabaseName,IndexName,IncludeDocs,SearchKey)
+			*   @param {string} idx
+			*   @param {boolean} includeDocs
 			*	@return {Promise} returned promise contains matching data
 			*/
 			$pouchyModel.query(targetDB,idx,true,data._id).then(function(doc) {
@@ -1039,23 +1048,84 @@ angular.module("pouchy.model",[])
 	   }
 	}
 })
-.directive("onOffSwitch",["$parse",function($parse) {
+.directive("onOffSwitch",["$pouchySAINTAPI","DATALAYER","$pouchyModel",function($pouchySAINTAPI,DATALAYER,$pouchyModel) {
 	var tmp = 	"<div>" +
-					"<input type='checkbox' ng-click='switchSAINT()'>" +
+					"<button type='button' ng-click='switchSAINT()' class='btn' ng-class='getClass()'><span ng-if='scope.item.doc.saintstatus'>ON</span><span ng-if='!scope.item.doc.saintstatus'>OFF</span></button>" + 
 				"</div>";
 	return {
 		template: tmp,
-		scope: {
-			dataset: "@"
-		},
 		link: function(scope,element,attr) {
-			//var getter = $parse(attr.dataset.saintstatus);
-			//var setter = getter.assign;
-			//scope.saintstatus = (scope.saintstatus === undefined) ? !!scope.saintstatus : scope.saintstatus;
-			//scope.switchSAINT = function() {
-			//	scope.saintstatus = !scope.saintstatus;
-			//	setter(scope.$parent.item.doc,scope.saintstatus);
-			//}
+			scope.getClass = function() {
+				if(scope.item.doc.saintstatus) {
+					return "btn-success";
+				} else {
+					return "btn-danger";
+				}
+			}
+			scope.switchSAINT = function() {
+				/**
+				*	If checkbox is unchecked we will use the SAINT API to upload our new classification dataset.
+				*	The process is simply a chain of http requests as there are multiple steps necessary to url
+				*	a dataset with SAINT. Before the new key can be uploaded we check the classification template
+				*	and fill the columns according to the template.
+				*
+				*	The process is as follows:
+				*
+				*	Get Template -> Create Import -> Retrieve Job ID -> Populate Import -> Commit Import (Insert Job ID) -> Success/Failure
+				*/
+				if(scope.item.doc.saintstatus === false) {
+					var _id;
+					var conf = {
+						"encoding":"utf-8",
+						"rsid_list":[
+							"deutschepostwpmdhlmpdev2"
+						]
+					}
+					conf.element = DATALAYER.analyticsConfig.classification_element;
+					$pouchySAINTAPI.requestSAINT("Classifications.GetTemplate",conf)
+					.then(function(res) {
+						var s = res.data[0].template.split("\r\n");
+						var sn = s[3].split("\t");
+						var conf = {
+							"check_divisions":"1",
+							"description":"Classification Upload API",
+							"export_results":"0",
+							"overwrite_conflicts":"0",
+						}
+						conf.element = DATALAYER.analyticsConfig.classification_element;
+						conf.email_address = DATALAYER.analyticsConfig.notification_email_address;
+						conf.header = sn;
+						conf.rsid_list = [DATALAYER.analyticsConfig.reportSuite];
+						return $pouchySAINTAPI.requestSAINT("Classifications.CreateImport",conf);
+					}).then(function(res) {
+						if(res) {
+							_id = res.data["job_id"];
+							var conf = {
+								"page":"1",
+								"rows":[]
+							}
+							conf["job_id"] = _id;
+							conf.rows.push({
+								"row": [scope.item.doc.cid,scope.item.doc.campaign_type,scope.item.doc.campaign_id,scope.item.doc.campaign_start,scope.item.doc.campaign_end,scope.item.doc.placement,scope.item.doc.adtype,scope.item.doc.creative_channel,DATALAYER.cidConfig.domainToken]
+							});
+							return $pouchySAINTAPI.requestSAINT("Classifications.PopulateImport",conf);
+						}
+					}).then(function(res) {
+						if(res) {
+							var conf = {};
+							conf["job_id"] = _id;
+							return $pouchySAINTAPI.requestSAINT("Classifications.CommitImport",conf);
+						}
+					}).then(function(res) {
+						scope.item.doc.saintstatus = !scope.item.doc.saintstatus;
+						return $pouchyModel.databaseContainer["cid_db"].addItem(scope.item.doc);
+					}).then(function(res) {
+						console.log(res);
+					});
+				} else {
+					console.log(scope.item.doc);
+				}
+			}
 		}
 	}
 }])
@@ -1064,9 +1134,8 @@ angular.module("pouchy.model",[])
 	var wsse = new Wsse();
 	/**
 	*	SAINT (RESTful API) implementation for Classification in Adobe Analytics
-	*	@params {String,Object}
-	*		RestAPI @1(method - see adobe manual for more information),
-	*		@2(params for designated method)
+	*	@params {string} method - method to be executed from SAINT API
+	*	@params {object} params - parameters to be passed to the method
 	*	@return {Promise}
 	*/
 	function requestSAINT(method,params) {
@@ -1082,7 +1151,7 @@ angular.module("pouchy.model",[])
 	}
 	
 	return {
-		//requestSAINT
+		requestSAINT: requestSAINT
 	}
 }])
 .directive("contextMenu",function($compile) {
@@ -1129,7 +1198,7 @@ angular.module("pouchy.model",[])
 						while(node.className.indexOf("main-table-tr") === -1) {
 							node = node.parentElement;
 						}
-						var data = $(node).data("context-info");
+						var data = JSON.parse(node.getAttribute("data-context-info"));
 						var newData = {};
 						for(var key in data) {
 							if(key !== "_rev" && key !== "_id") {
@@ -1141,9 +1210,11 @@ angular.module("pouchy.model",[])
 							var contextMenu = $("#contextMenu");
 							var widthCorrection = contextMenu.width() / 2;
 							element.addClass("context-menu-show");
+							var O_O_top = $("#context-0-0").position().top;
+							var O_O_left = $("#context-0-0").position().left;
 							contextMenu.css({
-								top: (e.clientY + 20) + "px",
-								left: (e.clientX - widthCorrection) + "px"
+								top: (e.clientY - O_O_top + 20) + "px",
+								left: (e.clientX - O_O_left - widthCorrection) + "px"
 							});
 						});
 					});
@@ -1278,6 +1349,10 @@ angular.module("pouchy.cidLogic",[])
 				}
 			}
 		} else {
+			//empty rows - necessary for optimal presentation in export csv file
+			data.intelliad_id = "";
+			data.intelliad_root = "";
+			data.intelliad_ext = "";
 			//add INTcampaignID to new Dataset
 			for(var i=0;i<=intCampaigns.length-1;i++) {
 				if(intCampaigns[i].name === data.campaign_name) {
@@ -1311,8 +1386,10 @@ angular.module("pouchy.cidLogic",[])
 		}
 		data.FQ = FQ;
 		data.cid = cid;
-		if(data.intelliad_id) {
+		if(data.intelliad_id !== "") {
 			data.intelliad_encoded = data.intelliad_root + encodeURIComponent(data.FQ) + data.intelliad_ext;
+		} else {
+			data.intelliad_encoded = "";
 		}
 		data.saintstatus = false;
 		//time stamp of last modification

@@ -1,0 +1,14 @@
+{
+	"check_divisions":"1",
+	"description":"Jakobs Test",
+	"element":"trackingcode",
+	"email_address":"jakob.schlonsok@deutschepost.de",
+	"export_results":"0",
+	"header":[
+		"Key","Campaign Type","Creative Channel","Campaign ID","Campaign","Campaign Start","Campaign End","Creative Placement","Creative Type","Creative","Domain"
+	],
+	"overwrite_conflicts":"0",
+	"rsid_list":[
+		"deutschepostwpmdhlmpdev2"
+	]
+}

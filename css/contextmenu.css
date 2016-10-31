@@ -3,7 +3,7 @@
 }
 
 .context-menu-show .context-menu-wrapper {
-	position: fixed;
+	position: absolute;
 	display: inline-block !important;
 	z-index: 100;
 }
