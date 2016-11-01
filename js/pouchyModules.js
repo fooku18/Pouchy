@@ -918,7 +918,9 @@ angular.module("pouchy.model",[])
 			*	@return {Promise} returned promise contains matching data
 			*/
 			$pouchyModel.query(targetDB,idx,true,data._id).then(function(doc) {
+				console.log(doc);
 				if(doc.rows.length) {
+					console.log(doc);
 					//copy changed values into new object which later changes all matching cid datasets
 					var changedData = {};
 					angular.forEach(data,function(val,key) {
@@ -937,10 +939,13 @@ angular.module("pouchy.model",[])
 					}
 					$pouchyModel.databaseContainer.cid_db.db.bulkDocs(a).then(function(res) {
 						console.log(res);
+					},function(err) {
+						console.log(err)
 					});
 				}
+			},function(err) {
+				console.log(err);
 			});
-		
 		}
 		$pouchyModel.databaseContainer[db].addItem(data);
 	}
@@ -1049,17 +1054,51 @@ angular.module("pouchy.model",[])
 	}
 })
 .directive("onOffSwitch",["$pouchySAINTAPI","DATALAYER","$pouchyModel",function($pouchySAINTAPI,DATALAYER,$pouchyModel) {
-	var tmp = 	"<div>" +
-					"<button type='button' ng-click='switchSAINT()' class='btn' ng-class='getClass()'><span ng-if='scope.item.doc.saintstatus'>ON</span><span ng-if='!scope.item.doc.saintstatus'>OFF</span></button>" + 
+	var tmp = 	"<div class='main-center relative'>" +
+					"<button type='button' class='btn btn-circle btn-circle-lg btn-outline-none rotate-360' ng-class='getClass()'>" +
+						"<span class='glyphicon' ng-class='getIcon()'></span>" +
+					"</button>" + 
+					"<div class='main-fluid-action absolute'>" +
+						"<button type='button' ng-click='switchSAINT()' class='btn btn-circle btn-danger btn-fluid rotate-360'>" +
+							"<span class='glyphicon glyphicon-remove'></span>" +
+						"</button>" + 
+						"<button type='button' ng-click='switchSAINT()' class='btn btn-circle btn-success btn-fluid rotate-360'>" +
+							"<span class='glyphicon glyphicon-ok'></span>" +
+						"</button>" + 
+					"</div>" +
 				"</div>";
 	return {
 		template: tmp,
 		link: function(scope,element,attr) {
+			(function() {
+				var fn = function(el) {
+					$(el).fadeToggle();
+				};
+				var elmt = $(element);
+				var chldrn = elmt.find(".main-fluid-action").children();
+				var btn = elmt.find(".btn-circle-lg").first()[0];
+				elmt.first().click(function() {
+					var t = 0;
+					chldrn.each(function(key,val) {
+						setTimeout(function() {
+							fn(val);
+						},t);
+						t += 200;
+					});
+				});
+			}());
 			scope.getClass = function() {
 				if(scope.item.doc.saintstatus) {
 					return "btn-success";
 				} else {
 					return "btn-danger";
+				}
+			}
+			scope.getIcon = function() {
+				if(scope.item.doc.saintstatus) {
+					return "glyphicon-ok";
+				} else {
+					return "glyphicon-remove";
 				}
 			}
 			scope.switchSAINT = function() {
@@ -1121,6 +1160,8 @@ angular.module("pouchy.model",[])
 						return $pouchyModel.databaseContainer["cid_db"].addItem(scope.item.doc);
 					}).then(function(res) {
 						console.log(res);
+					}).catch(function(err) {
+						console.log(err);
 					});
 				} else {
 					console.log(scope.item.doc);
@@ -1270,7 +1311,7 @@ angular.module("pouchy.cidLogic",[])
 					"}" + 
 					"return [intcampaigns,extcampaigns];" +
 				"}";
-		$pouchyWorker.callWorker("campaigns_db",fn).then(function(doc) {
+		$pouchyWorker.callWorker("campaign_db",fn).then(function(doc) {
 			$scope.intCampaigns = doc[0];
 			$scope.extCampaigns = doc[1];
 		});

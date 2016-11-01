@@ -1,5 +1,5 @@
 var app = (function() {
-	var app = angular.module("myApp",["pouchy.pouchDB","pouchy.cidLogic","ngRoute","pouchy.navigation","pouchy.modal","pouchy.pagination","pouchy.import_export","pouchy.multiPurpose","pouchy.worker","pouchy.model"])//;
+	var app = angular.module("myApp",["pouchy.pouchDB","pouchy.cidLogic","ngRoute","pouchy.navigation","pouchy.modal","pouchy.pagination","pouchy.import_export","pouchy.multiPurpose","pouchy.worker","pouchy.model","ngAnimate"])//;
 	app.run(["$pouchDB","DATALAYER","$pouchyModel",function($pouchDB,DATALAYER,$pouchyModel) {
 		var _global = DATALAYER;
 		for(var i=0;i<=_global.databaseConfig.databases.length-1;i++) {

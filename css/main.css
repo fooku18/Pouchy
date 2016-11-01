@@ -18,6 +18,21 @@
 	}
 }
 
+@keyframes slide-right-in {
+	from {
+		transform: translateX(100%);
+	}
+	to {
+		transform: translateX(0);
+	}
+}
+
+@keyframes slide-rigth-out {
+	to {
+		transform: translateX(-100%);
+	}
+}
+
 select {
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -27,6 +42,34 @@ select {
 	background-repeat: no-repeat;
 	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAKCAYAAAA6jzeaAAAA8klEQVQ4jb3PsWpCQRCF4a18EBvBSrCysPIFQmDBStjZ+U9j6VMJSZ067yIIgiCCTaLeNLsgIQkRvZ5qi5kz34YYYwdYuvtzuCKSnoBljLFzzd5vZa+SGkmfwPQ/O8BU0oekBni5GZFznkg6lMKju8/+mnf3GXAs8EPOeXIzohSPgX0pPgH8NAcg6VTAe3cf3wVQY2YjSbty4Ozu82/QOXAu0J2Zje4KuDg0BLYVImkRQgiSFhUAbN192AqgBhgAm/LjRtJbfQMbYNAqoCal1Je0voA0ktYppf5DADVm1pO0KoCVmfUeCriAdCW9m1m3zTtfjy6QikAhdtsAAAAASUVORK5CYII=) !important;
 }
+
+/**
+*	angular ngAnimate classes
+*/
+/*ngView main tab slider*/
+.navi.ng-enter {
+	animation-name: slide-right-in;
+	animation-duration: .35s;
+	animation-timing-function: ease-out;
+}
+/*ngRepeat tables*/
+.animate.ng-enter, 
+.animate.ng-leave
+{ 
+    transition: .3s cubic-bezier(0.250, 0.250, 0.750, 0.750) all;
+} 
+ 
+.animate.ng-leave.animate.ng-leave-active,
+.animate.ng-enter {
+    opacity: 0;
+}
+ 
+.animate.ng-enter.animate.ng-enter-active, 
+.animate.ng-leave {
+    opacity: 1;
+}
+/**
+*/
 
 .bar {
 	position: fixed;
@@ -40,6 +83,10 @@ select {
 
 .display-none {
 	display: none !important;
+}
+
+.opacity-0 {
+	opacity: 0;
 }
 
 .banner {
@@ -124,6 +171,10 @@ select {
 
 .left-0 {
 	left:0;
+}
+
+.right-0 {
+	right:0;
 }
 
 .left-25 {
@@ -334,4 +385,47 @@ select {
 
 .main-sort-arrow-down {
 	border-width: 0 .2em .2em 0;
+}
+
+.btn-circle {
+	width: 25px;
+	height: 25px;
+	text-align: center;
+	font-size: 14px;
+	border-radius: 25px;
+	padding: 0;
+}
+
+.btn-circle-lg {
+	width: 35px;
+	height: 35px;
+	border-radius: 35px;
+}
+
+.btn-circle:hover {
+	transform: rotate(360deg);
+}
+
+.rotate-360{
+	transition: transform .15s linear;
+}
+
+.rotate-360:hover {
+	transition: transform .15s linear;
+}
+
+.main-fluid-action {
+	top: 0;
+	right: -50px;
+	width: 55px;
+	z-index: 1;
+}
+
+.btn-fluid {
+	display: none;
+	outline: none !important;
+}
+
+.btn-outline-none {
+	outline: none !important;
 }

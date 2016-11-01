@@ -52,7 +52,7 @@
 					<div class="col-sm-1 main-center">Aktionen</div>
 				</div>
 				<div class="main-table-tr-wrapper">
-					<div class="main-table-tr" ng-repeat="value in items | orderBy:doc.creationdate:true track by $index" data-context-info="{{value.doc}}">
+					<div class="main-table-tr animate" ng-repeat="value in items | orderBy:doc.creationdate:true track by $index" data-context-info="{{value.doc}}">
 						<form name="userFormChange" ng-submit="validation(this.userFormChange,{_id:value.doc._id,_rev:value.doc._rev,channelID:value.doc.channelID,channel:value.doc.channel})" novalidate>
 							<div class="col-sm-2"><input type="text" class="main-borderless-input" ng-model="value.doc.channelID" ng-minlength="1" ng-maxlength="1" required /></div>
 							<div class="col-sm-9"><input type="text" class="main-borderless-input" ng-model="value.doc.channel" required /></div>
