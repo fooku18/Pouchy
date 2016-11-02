@@ -824,7 +824,7 @@ angular.module("pouchy.model",[])
 }])
 //mainCtrl is initilized on every new tab - this is to prevent too much scope overhead for non relevant data as 
 //all database data is present in the background service
-.controller("mainCtrl",["$scope","$pouchyWorker","$hashService","$msgBusService","$attrs","$modalService","$pouchyModel","$pouchyModelDatabase","$filter","$pouchyDesignViews",function mainController($scope,$pouchyWorker,$hashService,$msgBusService,$attrs,$modalService,$pouchyModel,$pouchyModelDatabase,$filter,$pouchyDesignViews) {
+.controller("mainCtrl",["$scope","$pouchyWorker","$hashService","$msgBusService","$attrs","$modalService","$pouchyModel","$pouchyModelDatabase","$filter","$pouchyDesignViews","DATALAYER","$pouchyLoader","$pouchySAINTAPI",function mainController($scope,$pouchyWorker,$hashService,$msgBusService,$attrs,$modalService,$pouchyModel,$pouchyModelDatabase,$filter,$pouchyDesignViews,DATALAYER,$pouchyLoader,$pouchySAINTAPI) {
 	//fetch database name from template attribute - this is important to seperate the data from the model service
 	var db = $attrs.db;
 	$scope.changeSortType = function(val) {
@@ -918,7 +918,6 @@ angular.module("pouchy.model",[])
 			*	@return {Promise} returned promise contains matching data
 			*/
 			$pouchyModel.query(targetDB,idx,true,data._id).then(function(doc) {
-				console.log(doc);
 				if(doc.rows.length) {
 					console.log(doc);
 					//copy changed values into new object which later changes all matching cid datasets
@@ -938,7 +937,62 @@ angular.module("pouchy.model",[])
 						a.push(doc.rows[i].doc);
 					}
 					$pouchyModel.databaseContainer.cid_db.db.bulkDocs(a).then(function(res) {
-						console.log(res);
+						//**********************************************
+						$pouchyLoader.loaderToggle();
+						var _id;
+						var conf = {
+							"encoding":"utf-8"
+						}
+						conf.rsid_list = [DATALAYER.analyticsConfig.reportSuite];
+						conf.element = DATALAYER.analyticsConfig.classification_element;
+						$pouchySAINTAPI.requestSAINT("Classifications.GetTemplate",conf)
+						.then(function(res) {
+							var s = res.data[0].template.split("\r\n");
+							var sn = s[3].split("\t");
+							var conf = {
+								"check_divisions":"1",
+								"description":"Classification Upload API",
+								"export_results":"0",
+								"overwrite_conflicts":"1",
+							}
+							conf.element = DATALAYER.analyticsConfig.classification_element;
+							conf.email_address = DATALAYER.analyticsConfig.notification_email_address;
+							conf.header = sn;
+							conf.rsid_list = [DATALAYER.analyticsConfig.reportSuite];
+							return $pouchySAINTAPI.requestSAINT("Classifications.CreateImport",conf);
+						}).then(function(res) {
+							if(res) {
+								_id = res.data["job_id"];
+								var conf = {
+									"page":"1",
+									"rows":[]
+								}
+								conf["job_id"] = _id;
+								for(var k=0;k<a.length;k++) {
+									conf.rows.push({
+										"row": [
+											a[k].cid,a[k].campaign_type,a[k].creative_channel,a[k].campaign_id,
+											a[k].campaign_name,a[k].campaign_start,a[k].campaign_end,a[k].placement,
+											a[k].adtype,a[k].ad,DATALAYER.cidConfig.domainToken
+										]
+									})
+								};
+								return $pouchySAINTAPI.requestSAINT("Classifications.PopulateImport",conf);
+							}
+						}).then(function(res) {
+							if(res) {
+								var conf = {};
+								conf["job_id"] = _id;
+								return $pouchySAINTAPI.requestSAINT("Classifications.CommitImport",conf);
+							}
+						}).then(function(res) {
+							$pouchyLoader.loaderToggle();
+							console.log(res);
+						}).catch(function(err) {
+							$pouchyLoader.loaderToggle();
+							console.log(err);
+						});
+						//**********************************************
 					},function(err) {
 						console.log(err)
 					});
@@ -1053,16 +1107,16 @@ angular.module("pouchy.model",[])
 	   }
 	}
 })
-.directive("onOffSwitch",["$pouchySAINTAPI","DATALAYER","$pouchyModel",function($pouchySAINTAPI,DATALAYER,$pouchyModel) {
+.directive("onOffSwitch",["$pouchySAINTAPI","DATALAYER","$pouchyModel","$pouchyLoader",function($pouchySAINTAPI,DATALAYER,$pouchyModel,$pouchyLoader) {
 	var tmp = 	"<div class='main-center relative'>" +
 					"<button type='button' class='btn btn-circle btn-circle-lg btn-outline-none rotate-360' ng-class='getClass()'>" +
 						"<span class='glyphicon' ng-class='getIcon()'></span>" +
 					"</button>" + 
 					"<div class='main-fluid-action absolute'>" +
-						"<button type='button' ng-click='switchSAINT()' class='btn btn-circle btn-danger btn-fluid rotate-360'>" +
+						"<button type='button' ng-click='switchSAINT(0)' class='btn btn-circle btn-danger btn-fluid rotate-360'>" +
 							"<span class='glyphicon glyphicon-remove'></span>" +
 						"</button>" + 
-						"<button type='button' ng-click='switchSAINT()' class='btn btn-circle btn-success btn-fluid rotate-360'>" +
+						"<button type='button' ng-click='switchSAINT(1)' class='btn btn-circle btn-success btn-fluid rotate-360'>" +
 							"<span class='glyphicon glyphicon-ok'></span>" +
 						"</button>" + 
 					"</div>" +
@@ -1101,7 +1155,7 @@ angular.module("pouchy.model",[])
 					return "glyphicon-remove";
 				}
 			}
-			scope.switchSAINT = function() {
+			scope.switchSAINT = function(val) {
 				/**
 				*	If checkbox is unchecked we will use the SAINT API to upload our new classification dataset.
 				*	The process is simply a chain of http requests as there are multiple steps necessary to url
@@ -1112,14 +1166,13 @@ angular.module("pouchy.model",[])
 				*
 				*	Get Template -> Create Import -> Retrieve Job ID -> Populate Import -> Commit Import (Insert Job ID) -> Success/Failure
 				*/
-				if(scope.item.doc.saintstatus === false) {
+				if(!scope.item.doc.saintstatus) {
+					$pouchyLoader.loaderToggle();
 					var _id;
 					var conf = {
-						"encoding":"utf-8",
-						"rsid_list":[
-							"deutschepostwpmdhlmpdev2"
-						]
+						"encoding":"utf-8"
 					}
+					conf.rsid_list = [DATALAYER.analyticsConfig.reportSuite];
 					conf.element = DATALAYER.analyticsConfig.classification_element;
 					$pouchySAINTAPI.requestSAINT("Classifications.GetTemplate",conf)
 					.then(function(res) {
@@ -1145,7 +1198,9 @@ angular.module("pouchy.model",[])
 							}
 							conf["job_id"] = _id;
 							conf.rows.push({
-								"row": [scope.item.doc.cid,scope.item.doc.campaign_type,scope.item.doc.campaign_id,scope.item.doc.campaign_start,scope.item.doc.campaign_end,scope.item.doc.placement,scope.item.doc.adtype,scope.item.doc.creative_channel,DATALAYER.cidConfig.domainToken]
+								"row": [scope.item.doc.cid,scope.item.doc.campaign_type,scope.item.doc.creative_channel,scope.item.doc.campaign_id,
+										scope.item.doc.campaign_name,scope.item.doc.campaign_start,scope.item.doc.campaign_end,scope.item.doc.placement,
+										scope.item.doc.adtype,scope.item.doc.ad,DATALAYER.cidConfig.domainToken]
 							});
 							return $pouchySAINTAPI.requestSAINT("Classifications.PopulateImport",conf);
 						}
@@ -1159,8 +1214,10 @@ angular.module("pouchy.model",[])
 						scope.item.doc.saintstatus = !scope.item.doc.saintstatus;
 						return $pouchyModel.databaseContainer["cid_db"].addItem(scope.item.doc);
 					}).then(function(res) {
+						$pouchyLoader.loaderToggle();
 						console.log(res);
 					}).catch(function(err) {
+						$pouchyLoader.loaderToggle();
 						console.log(err);
 					});
 				} else {
@@ -1170,6 +1227,13 @@ angular.module("pouchy.model",[])
 		}
 	}
 }])
+.factory("$pouchyLoader",function pouchyLoaderFactory() {
+	return {
+		loaderToggle: function() {
+			$("body").toggleClass("loading");
+		}
+	}
+})
 .factory("$pouchySAINTAPI",["$http","DATALAYER",function pouchySAINTFactory($http,DATALAYER) {
 	//WSSE is a hash library provided by Adobe
 	var wsse = new Wsse();
@@ -1382,7 +1446,7 @@ angular.module("pouchy.cidLogic",[])
 			for(var i=0;i<=extCampaigns.length-1;i++) {
 				if(extCampaigns[i].name === data.campaign_name) {
 					data.campaign_id = extCampaigns[i]._id;
-					data.campaign_type = extCampaigns[i].type.charAt(0).toLowerCase();
+					data.campaign_type = extCampaigns[i].type;
 					data.campaign_start = extCampaigns[i].start;
 					data.campaign_end = extCampaigns[i].end;
 					data.campaign_suffix = "e";
@@ -1398,8 +1462,8 @@ angular.module("pouchy.cidLogic",[])
 			for(var i=0;i<=intCampaigns.length-1;i++) {
 				if(intCampaigns[i].name === data.campaign_name) {
 					data.campaign_id = intCampaigns[i]._id;
-					data.campaign_type = intCampaigns[i].type.charAt(0).toLowerCase();
-					data.campaigns_start = intCampaigns[i].start;
+					data.campaign_type = intCampaigns[i].type;
+					data.campaign_start = intCampaigns[i].start;
 					data.campaign_end = intCampaigns[i].end;
 					data.campaign_suffix = "i";
 					break;
@@ -1418,7 +1482,7 @@ angular.module("pouchy.cidLogic",[])
 		var domainToken = DATALAYER.cidConfig.domainToken;
 		var organizationToken = DATALAYER.cidConfig.organizationToken;
 		//if question mark does exist then add ampersand and concatenate
-		var cid = data.campaign_type + "_" + domainToken + "_" + data.creative_channelid + data.campaign_suffix + "_" + organizationToken + "_" + data.campaign_id + "_" + data.adid + "_" + data.randomid;
+		var cid = data.campaign_type.charAt(0).toLowerCase() + "_" + domainToken + "_" + data.creative_channelid + data.campaign_suffix + "_" + organizationToken + "_" + data.campaign_id + "_" + data.adid + "_" + data.randomid;
 		if(data.targeturl.indexOf("?") > -1) {
 			var FQ = data.targeturl + "&" + cid;
 		} else {

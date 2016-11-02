@@ -404,6 +404,8 @@ select {
 
 .btn-circle:hover {
 	transform: rotate(360deg);
+	-ms-transform: rotate(360deg);
+	-webkit-transform: rotate(360deg);
 }
 
 .rotate-360{

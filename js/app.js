@@ -3,9 +3,13 @@ var app = (function() {
 	app.run(["$pouchDB","DATALAYER","$pouchyModel",function($pouchDB,DATALAYER,$pouchyModel) {
 		var _global = DATALAYER;
 		for(var i=0;i<=_global.databaseConfig.databases.length-1;i++) {
-			//$pouchDB.setDatabase(_global.databaseConfig.databases[i]);
 			$pouchyModel.initDatabase(_global.databaseConfig.databases[i]);
 		}
+		$("document").ready(function() {
+			setTimeout(function() {
+				$("body").toggleClass("loaded");
+			},2000);
+		});
 	}]).config(["$routeProvider","DATALAYER",function($routeProvider,DATALAYER) {
 		var exec = (function() {
 			var tmp = "$routeProvider";
