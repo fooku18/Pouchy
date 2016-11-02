@@ -18,11 +18,11 @@
 		"organizationToken": "dpcom"
 	},
 	"analyticsConfig": {
-		"username": "j.schlonsok:Deutsche Post AG",
-		"secret": "3d7362c4d626c3de0997addc9d5c949c",
-		"reportSuite": "deutschepostwpmdhlmpdev2",
+		"username": "xx",
+		"secret": "xx",
+		"reportSuite": "xx",
 		"endpoint": "api.omniture.com",
-		"notification_email_address": "jakob.schlonsok@deutschepost.de",
-		"classification_element": "trackingcode"
+		"notification_email_address": "xx",
+		"classification_element": "xx"
 	}
 }
