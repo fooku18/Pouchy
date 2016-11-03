@@ -1,0 +1,26 @@
+.importexport-menu {
+	transform: scale(1,0);
+}
+
+.importexport-wrapper-dropdown > .importexport-menu  {
+	display: block !important;
+	font-family: 'Abel', sans-serif;
+	top:50px;
+	left: -50px;
+	background-color: #ffffff;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	top: 40px;
+	transform: scale(1,1);
+	width: 150%;
+	box-shadow: 4px 4px 80px #000;
+	min-width: 100px;
+}
+
+.importexport-menu > .importexport-framer {
+	padding: 20px;
+}
+
+.importexport-btn {
+	width: 100%;
+}

@@ -1,10 +1,15 @@
 var app = (function() {
-	var app = angular.module("myApp",["pouchy.pouchDB","pouchy.pageLogic","ngRoute","pouchy.navigation","pouchy.clipboard","pouchy.modal","pouchy.pagination","pouchy.import_export","pouchy.multiPurpose","pouchy.news","pouchy.worker"])//;
-	app.run(["$pouchDB","DATALAYER",function($pouchDB,DATALAYER) {
+	var app = angular.module("myApp",["pouchy.pouchDB","pouchy.cidLogic","ngRoute","pouchy.navigation","pouchy.modal","pouchy.pagination","pouchy.import_export","pouchy.multiPurpose","pouchy.worker","pouchy.model","ngAnimate"])//;
+	app.run(["$pouchDB","DATALAYER","$pouchyModel",function($pouchDB,DATALAYER,$pouchyModel) {
 		var _global = DATALAYER;
 		for(var i=0;i<=_global.databaseConfig.databases.length-1;i++) {
-			$pouchDB.setDatabase(_global.databaseConfig.databases[i]);
+			$pouchyModel.initDatabase(_global.databaseConfig.databases[i]);
 		}
+		$("document").ready(function() {
+			setTimeout(function() {
+				$("body").toggleClass("loaded");
+			},2000);
+		});
 	}]).config(["$routeProvider","DATALAYER",function($routeProvider,DATALAYER) {
 		var exec = (function() {
 			var tmp = "$routeProvider";

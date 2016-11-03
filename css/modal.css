@@ -1,16 +1,16 @@
 .custom-modal-overlay {
 	position:absolute;
-	z-index:9999;
+	z-index:998;
 	top:0;
 	left:0;
 	width:100%;
 	height:100%;
-	background-color:#000000;
+	background-color: rgba(0,0,0,.3);
 	opacity: 0.8;
 }
 
 .custom-modal-dialog {
-	z-index:10000;
+	z-index:999;
 	position: absolute;
 	width: 50%;
 	top: 50%;
@@ -39,6 +39,10 @@
 
 .custom-modal-bar-blue {
 	background-color: #4C96EA;
+}
+
+.custom-modal-bar-white {
+	background-color: #ffffff;
 }
 
 .custom-modal-dialog-padding {

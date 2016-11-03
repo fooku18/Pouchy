@@ -1,5 +1,5 @@
 <div ng-controller="mainCtrl" db="intelliad_db">
-	<form name="userForm" ng-submit="validation(userForm.$valid,{'name':c.Name,'root':c.Root,'ext':c.Ext})" novalidate>
+	<form name="userForm" ng-submit="validation(userForm,{'name':c.Name,'root':c.Root,'ext':c.Ext})" novalidate>
 		<div class="row padding-top-10 padding-bottom-10">
 			<div class="col-md-8 col-sm-8 block form-group relative" ng-class="{'has-error': userForm.cName.$invalid && !userForm.cName.$pristine }">
 				<div class="padding-bottom-5">
@@ -43,21 +43,50 @@
 		</div>
 	</form>
 	<div class="row">
-		<div class="col-md-12 col-sm-12">
-			<table class="table table-responsive table-hover">
-				<!--<th>ID</th>--><th>Titel</th><th>Stamm-Url</th><th>Zusatz-Url</th><th style="text-align: center;">Löschen</th>
-				<tr ng-repeat="(key,value) in items track by $index">
-					<!--<td>{{value.doc._id}}</td>-->
-					<td>{{value.doc.name}}</td>
-					<td>{{value.doc.root}}</td>
-					<td>{{value.doc.ext}}</td>
-					<td align="center">
-						<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'ItelliAd-Kampagne: &quot;' + value.doc.name + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
-							<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-						</button>
-					</td>
-				</tr>
-			</table>
+		<div id="context-0-0" class="col-md-12 col-sm-12">
+			<div class="main-table" context-menu>
+				<div class="main-table-th">
+					<div class="col-sm-2 cursor-pointer" ng-click="changeSortType('name')">
+						Titel
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'name'">
+							</i>
+						</span>
+					</div>
+					<div class="col-sm-4 cursor-pointer" ng-click="changeSortType('root')">
+						Stamm-Url
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'root'">
+							</i>
+						</span>
+					</div>
+					<div class="col-sm-4 cursor-pointer" ng-click="changeSortType('ext')">
+						Zusatz-Url
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'ext'">
+							</i>
+						</span>
+					</div>
+					<div class="col-sm-1 main-center">Aktionen</div>
+				</div>
+				<div class="main-table-tr-wrapper">
+					<div class="main-table-tr animate" ng-repeat="value in items | orderBy:doc.creationdate:true track by $index" data-context-info="{{value.doc}}">
+						<form name="userFormChange" ng-submit="validation(this.userFormChange,{_id:value.doc._id,_rev:value.doc._rev,name:value.doc.name,root:value.doc.root,ext:value.doc.ext})" novalidate>
+							<div class="col-sm-2"><input type="text" class="main-borderless-input" ng-value="value.doc.name" ng-model="valueN.doc.name" ng-init="valueN.doc.name=value.doc.name" /></div>
+							<div class="col-sm-4"><input type="text" class="main-borderless-input" ng-value="value.doc.root" ng-model="valueN.doc.root" ng-init="valueN.doc.root=value.doc.root" /></div>
+							<div class="col-sm-4"><input type="text" class="main-borderless-input" ng-value="value.doc.ext" ng-model="valueN.doc.ext" ng-init="valueN.doc.ext=value.doc.ext" /></div>
+							<div class="col-sm-1 main-center">
+								<button type="submit" class="btn btn-default" ng-disabled="!userFormChange.$valid" style="padding: 1px 1px;">
+									<span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
+								</button>
+								<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'ItelliAd-Kampagne: &quot;' + value.doc.name + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
+									<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

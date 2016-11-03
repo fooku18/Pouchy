@@ -1,5 +1,5 @@
 <div ng-controller="mainCtrl" db="channelid_db">
-	<form name="userForm" ng-submit="validation(userForm.$valid,{'channelID':c.ChannelID,'channel':c.Channel})" novalidate>
+	<form name="userForm" ng-submit="validation(userForm,{'channelID':c.ChannelID,'channel':c.Channel})" novalidate>
 		<div class="row padding-top-10 padding-bottom-10">
 			<div class="col-md-8 col-sm-8 block form-group" ng-class="{'has-error': userForm.cChannelID.$invalid && !userForm.cChannelID.$pristine}">
 				<div class="padding-bottom-5">
@@ -32,19 +32,42 @@
 		</div>
 	</form>
 	<div class="row">
-		<div class="col-md-12 col-sm-12">
-			<table class="table table-responsive table-hover">
-				<th>Kanal-ID</th><th>Kanal</th><th style="text-align: center;">Löschen</th>
-				<tr ng-repeat="(key,value) in items track by $index">
-					<td>{{value.doc.channelID}}</td>
-					<td>{{value.doc.channel}}</td>
-					<td align="center">
-						<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'Kanal: &quot;' + value.doc.channel + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
-							<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-						</button>
-					</td>
-				</tr>
-			</table>
+		<div id="context-0-0" class="col-md-12 col-sm-12">
+			<div class="main-table" context-menu>
+				<div class="main-table-th">
+					<div class="col-sm-2 cursor-pointer" ng-click="changeSortType('channelid')">
+						Kanal-ID
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'channelid'">
+							</i>
+						</span>
+					</div>
+					<div class="col-sm-9 cursor-pointer" ng-click="changeSortType('channel')">
+						Kanal
+						<span class="padding-left-5">
+							<i class="main-sort-arrow" ng-class="{'main-sort-arrow-up':!sortDescending, 'main-sort-arrow-down':sortDescending}" ng-show="sortType === 'channel'">
+							</i>
+						</span>
+					</div>
+					<div class="col-sm-1 main-center">Aktionen</div>
+				</div>
+				<div class="main-table-tr-wrapper">
+					<div class="main-table-tr animate" ng-repeat="value in items | orderBy:doc.creationdate:true track by $index" data-context-info="{{value.doc}}">
+						<form name="userFormChange" ng-submit="validation(this.userFormChange,{_id:value.doc._id,_rev:value.doc._rev,channelID:value.doc.channelID,channel:value.doc.channel})" novalidate>
+							<div class="col-sm-2"><input type="text" class="main-borderless-input" ng-model="value.doc.channelID" ng-minlength="1" ng-maxlength="1" required /></div>
+							<div class="col-sm-9"><input type="text" class="main-borderless-input" ng-model="value.doc.channel" required /></div>
+							<div class="col-sm-1 main-center">
+								<button type="submit" class="btn btn-default" ng-disabled="!userFormChange.$valid" style="padding: 1px 1px;">
+									<span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
+								</button>
+								<button ng-click="deleteItem({id:value.doc._id,rev:value.doc._rev,info:'Kanal: &quot;' + value.doc.channel + '&quot;'})" type="button" class="btn btn-default" style="padding: 1px 1px;">
+									<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

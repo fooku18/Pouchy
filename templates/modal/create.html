@@ -1,17 +1,16 @@
-<div class="row custom-modal-modal-format" ng-controller="cidCtrl">
+<div class="row custom-modal-modal-format" cid-modal>
 	<h3>Bearbeitung</h3>
-	<form name="userForm" ng-submit="validation(userForm.$valid,{
+	<form name="userForm" ng-submit="validation(userForm,{
 			'_id':values._id, 
 			'_rev':values._rev, 
 			'targeturl':values.targeturl, 
-			'intext':values.intext, 
-			'extcampaign':values.extcampaign, 
-			'extintellicampaign':values.extintellicampaign, 
-			'intcampaign':values.intcampaign, 
+			'campaign_intext':values.campaign_intext, 
+			'campaign_name':values.campaign_name, 
+			'intelliad_name':values.intelliad_name, 
 			'ad':values.ad, 
 			'placement':values.placement, 
 			'adtype':values.adtype, 
-			'creativechannel':values.creativechannel, 
+			'creative_channel':values.creative_channel, 
 			'adid':values.adid, 
 			'randomid':values.randomid 
 		})" novalidate>
@@ -29,36 +28,34 @@
 				<p class="help-block my-info-box">Die Zieladresse muss eine gültige URL sein <br /> <i>http[s]://...</i> </p>
 			</div>
 		</div>
-		<div class="col-md-12 col-sm-12 block form-group" ng-class="{'has-error': userForm.cIntext.$invalid && userForm.cIntext.$touched, 'has-success': userForm.cIntext.$valid}" >
+		<div class="col-md-12 col-sm-12 block form-group" ng-class="{'has-error': userForm.ccampaign_intext.$invalid && userForm.ccampaign_intext.$touched, 'has-success': userForm.ccampaign_intext.$valid}" >
 			<div class="padding-bottom-5">
 				<span class="label label-default" ng-click="show()">Intern/Extern</span>
 			</div>
-			<select name="cIntext" ng-model="values.intext" class="form-control" ng-select="values.intext" ng-pattern="/.*/" required>
-				<option>Intern</option>
-				<option>Extern</option>
+			<select name="ccampaign_intext" ng-change="campaign_intextChanger(values.campaign_intext)" ng-model="values.campaign_intext" class="form-control" ng-select="values.campaign_intext" ng-pattern="/.*/" required ng-options="v for v in ['Intern','Extern']">
 			</select>
 		</div>
-		<div class="col-md-12 col-sm-12 block form-group" ng-show="isActive(values.intext)" ng-class="{'has-error': userForm.cExtcampaign.$invalid && userForm.cExtcampaign.$touched, 'has-success': userForm.cExtcampaign.$valid}" >
+		<div class="col-md-12 col-sm-12 block form-group" ng-show="isActive(values.campaign_intext)" ng-class="{'has-error': userForm.cExtcampaign.$invalid && userForm.cExtcampaign.$touched, 'has-success': userForm.cExtcampaign.$valid}" >
 			<div class="padding-bottom-5">
 				<span class="label label-default">Externe Kampagne</span>
 			</div>
-			<select name="cExtcampaign" ng-model="values.extcampaign" class="form-control" ng-select="values.extcampaign" wid-check="extern" ng-required="isActive(values.intext)" ng-pattern="/.*/">
+			<select name="cExtcampaign" ng-model="values.campaign_name" class="form-control" ng-select="values.campaign_name" ng-change="counter('campaign_name',values.campaign_name)" ng-required="isActive(values.campaign_intext)" ng-pattern="/.*/">
 				<option ng-repeat="i in extCampaigns">{{i.name}}</option>
 			</select>
 		</div>
-		<div class="col-md-12 col-sm-12 block form-group" ng-show="isActive(values.intext)" ng-class="{'has-error': userForm.cExtintellicampaign.$invalid && userForm.cExtintellicampaign.$touched, 'has-success': userForm.cExtintellicampaign.$valid}" >
+		<div class="col-md-12 col-sm-12 block form-group" ng-show="isActive(values.campaign_intext)" ng-class="{'has-error': userForm.cExtintellicampaign.$invalid && userForm.cExtintellicampaign.$touched, 'has-success': userForm.cExtintellicampaign.$valid}" >
 			<div class="padding-bottom-5">
 				<span class="label label-default">IntelliAd Kampagne</span>
 			</div>
-			<select name="cExtintellicampaign" ng-model="values.extintellicampaign" class="form-control" ng-select="values.extintellicampaign" ng-required="isActive(values.intext)" ng-pattern="/.*/">
+			<select name="cExtintellicampaign" ng-model="values.intelliad_name" class="form-control" ng-select="values.intelliad_name" ng-required="isActive(values.campaign_intext)" ng-pattern="/.*/">
 				<option ng-repeat="i in intelliAdCampaigns">{{i.name}}</option>
 			</select>
 		</div>
-		<div class="col-md-12 col-sm-12 block form-group" ng-show="!isActive(values.intext)" ng-class="{'has-error': userForm.cIntcampaign.$invalid && userForm.cIntcampaign.$touched, 'has-success': userForm.cIntcampaign.$valid}">
+		<div class="col-md-12 col-sm-12 block form-group" ng-show="!isActive(values.campaign_intext)" ng-class="{'has-error': userForm.cIntcampaign.$invalid && userForm.cIntcampaign.$touched, 'has-success': userForm.cIntcampaign.$valid}">
 			<div class="padding-bottom-5">
 				<span class="label label-default">Interne Kampagne</span>
 			</div>
-			<select name="cIntcampaign" ng-model="values.intcampaign" class="form-control" ng-select="values.intcampaign" wid-check="intern" ng-required="!isActive(values.intext)" ng-pattern="/.*/">
+			<select name="cIntcampaign" ng-model="values.campaign_name" class="form-control" ng-select="values.campaign_name" ng-change="counter('campaign_name',values.campaign_name)" ng-required="!isActive(values.campaign_intext)" ng-pattern="/.*/">
 				<option ng-repeat="i in intCampaigns">{{i.name}}</option>
 			</select>
 		</div>
@@ -108,7 +105,7 @@
 			<div class="padding-bottom-5">
 				<span class="label label-default">Creative Channel</span>
 			</div>
-			<select name="cCreativechannel" ng-model="values.creativechannel" class="form-control" ng-pattern="/.*/" required>
+			<select name="cCreativechannel" ng-model="values.creative_channel" class="form-control" ng-pattern="/.*/" required>
 				<option ng-repeat="i in creativeChannel">{{i.channel}}</option>
 			</select>
 		</div>
@@ -126,6 +123,12 @@
 		</div>
 		<div class="col-md-1 col-sm-1 padding-top-25">
 			<button type="submit" class="btn btn-default" id="btn-focus-on"><span class="glyphicon glyphicon-floppy-disk"></span></button>
+		</div>
+		<div class="col-md-11 col-sm-11 padding-top-25" ng-show="userForm.$submitted && userForm.$invalid" ng-class="{'has-error': userForm.$submitted && userForm.$invalid}">
+			<div class="padding-left-5">
+				<div class="my-arrow-up"></div>
+			</div>
+			<p class="help-block my-info-box">Es müssen erst alle Felder ausgefüllt werden</p>
 		</div>
 	</form>
 </div>
